@@ -124,11 +124,6 @@ input[type="number"].slider-val::-webkit-outer-spin-button,input[type="number"].
 .card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:22px;}
 .card-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--rsh-dark-gray);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
 
-/* UPTICK CARD ACCENT */
-.card-uptick-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
-.card-uptick-header .card-title{margin-bottom:0;}
-.uptick-trim{display:flex;align-items:flex-end;gap:0;flex-shrink:0;}
-
 /* BREAKDOWN TABLE */
 table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;}
 table.breakdown th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-bottom:1.5px solid var(--border-strong);}
@@ -507,13 +502,7 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
       <!-- LEFT: breakdown + allocation -->
       <div>
         <div class="card">
-          <div class="card-uptick-header">
-            <div class="card-title">Space Calculation Breakdown</div>
-            <svg width="60" height="18" viewBox="0 0 60 18">
-              <line x1="0" y1="14" x2="40" y2="14" stroke="#215eac" stroke-width="2"/>
-              <line x1="40" y1="14" x2="58" y2="4.8" stroke="#0ba89c" stroke-width="2"/>
-            </svg>
-          </div>
+          <div class="card-title">Space Calculation Breakdown</div>
           <table class="breakdown" id="breakdownTable"><tbody></tbody></table>
           <div id="gutcheck"></div>
         </div>
@@ -527,13 +516,7 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
       <!-- RIGHT: Gate-specific spatial schematic -->
       <div>
         <div class="card">
-          <div class="card-uptick-header">
-            <div class="card-title">Holdroom Spatial Schematic</div>
-            <svg width="60" height="18" viewBox="0 0 60 18">
-              <line x1="0" y1="14" x2="40" y2="14" stroke="#215eac" stroke-width="2"/>
-              <line x1="40" y1="14" x2="58" y2="4.8" stroke="#febc11" stroke-width="2"/>
-            </svg>
-          </div>
+          <div class="card-title">Holdroom Spatial Schematic</div>
           <!-- Gate selector tabs -->
           <div class="gate-tab-label">Select gate to view layout:</div>
           <div class="gate-tabs" id="gateTabs"></div>
@@ -1069,10 +1052,6 @@ function renderSVG(r, gIdx){
   svg += `<text x="${PAD+10}" y="${PAD+18}" font-size="12" font-weight="700" fill="#fff">Gate ${gIdx+1} — ${g.acModel || g.icao} · ADG ${g.adg} · ${airlineName}</text>`;
   svg += `<text x="${W-PAD-6}" y="${PAD+18}" font-size="10" fill="#85c7ee" text-anchor="end">${g.seats} seats · WS ${g.ws} ft</text>`;
 
-  // Uptick accent on title
-  svg += `<line x1="${W-PAD-70}" y1="${PAD+26}" x2="${W-PAD-20}" y2="${PAD+26}" stroke="#215eac" stroke-width="1.5"/>`;
-  svg += `<line x1="${W-PAD-20}" y1="${PAD+26}" x2="${W-PAD-6}" y2="${PAD+20.5}" stroke="#0ba89c" stroke-width="1.5"/>`;
-
   // Begin the program blocks directly at the bottom edge of the gate header.
   const drawY = PAD + 28;
   const drawH = H - drawY - PAD;
@@ -1128,10 +1107,6 @@ function renderSVG(r, gIdx){
     svg += '</g>';
     curY -= h;
   });
-
-  // 28° uptick accent mark at bottom right
-  svg += `<line x1="${W-PAD-50}" y1="${H-PAD-2}" x2="${W-PAD-18}" y2="${H-PAD-2}" stroke="#215eac" stroke-width="2"/>`;
-  svg += `<line x1="${W-PAD-18}" y1="${H-PAD-2}" x2="${W-PAD-4}" y2="${H-PAD-9.5}" stroke="#0ba89c" stroke-width="2"/>`;
 
   svg += '</svg>';
   wrap.innerHTML = svg;
