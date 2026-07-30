@@ -264,45 +264,160 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .ac-source-note{font-size:11px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px dashed var(--border);}
 
 /* PRINT */
-@page{size:8.5in 11in;margin:.45in;}
+@page{size:8.5in 11in;margin:.35in;}
 @media print{
-  html,body{background:#fff!important;width:8.5in;}
+  html,body{
+    background:#fff!important;
+    width:8.5in;
+    font-size:12px;
+  }
   body>*:not(.print-memo){display:none!important;}
   .print-memo{display:block!important;}
-  .pm-summary-page,.pm-breakdown-page,.pm-schematic-page{
+
+  .pm-first-page,
+  .pm-second-page,
+  .pm-schematic-page{
     width:100%;
-    min-height:9.85in;
-    break-after:page;
-    page-break-after:always;
+    min-height:10.3in;
+    background:#fff;
+    color:var(--text);
     break-inside:avoid;
     page-break-inside:avoid;
   }
-  .pm-schematic-page:last-child{
-    break-after:auto;
-    page-break-after:auto;
+
+  .pm-first-page,
+  .pm-second-page,
+  .pm-schematic-page:not(:last-child){
+    break-after:page;
+    page-break-after:always;
   }
-  .pm-breakdown-page table.breakdown{font-size:10px;}
-  .pm-breakdown-page table.breakdown th{font-size:8.5px;padding:5px 6px;}
-  .pm-breakdown-page table.breakdown td{padding:5px 6px;}
-  .pm-breakdown-page .bd-formula{font-size:8px;line-height:1.25;}
-  .pm-breakdown-page .bd-pct{font-size:9px;}
-  .pm-breakdown-page .alloc-grid{
+
+  .pm-first-page .pm-title{font-size:18px;margin-bottom:2px;}
+  .pm-first-page .pm-meta{font-size:11px;margin-bottom:7px;}
+  .pm-first-page .pm-section-title{margin:7px 0 3px;}
+
+  .pm-first-page .pm-table{
+    font-size:12px;
+    margin-bottom:5px;
+    line-height:1.15;
+  }
+  .pm-first-page .pm-table th,
+  .pm-first-page .pm-table td{
+    padding:3px 6px;
+  }
+  .pm-first-page .pm-table thead th{
+    font-size:11px;
+  }
+
+  /* Match the Total Holdroom Area text size throughout the calculation table. */
+  .pm-first-page .pm-breakdown-table,
+  .pm-first-page .pm-breakdown-table *{
+    font-size:12px!important;
+    line-height:1.18;
+  }
+  .pm-first-page .pm-breakdown-table{
+    margin-bottom:4px;
+  }
+  .pm-first-page .pm-breakdown-table th,
+  .pm-first-page .pm-breakdown-table td{
+    padding:3px 5px;
+  }
+  .pm-first-page .pm-breakdown-table .bd-formula{
+    margin-top:1px;
+    line-height:1.15;
+  }
+
+  .pm-print-section-heading{
+    font-size:12px!important;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    color:var(--rsh-blue);
+    margin:7px 0 3px;
+  }
+
+  .pm-second-page{
+    display:flex;
+    flex-direction:column;
+  }
+  .pm-second-page .pm-meta{
+    font-size:11px;
+    margin-bottom:5px;
+  }
+
+  /* Match the Total Holdroom Area text size throughout Zone Allocation. */
+  .pm-second-page .pm-allocation-grid,
+  .pm-second-page .pm-allocation-grid *{
+    font-size:12px!important;
+    line-height:1.2;
+  }
+  .pm-second-page .pm-allocation-grid{
     grid-template-columns:repeat(3,1fr);
     gap:7px;
+    margin-bottom:8px;
   }
-  .pm-breakdown-page .alloc{padding:9px 10px;}
-  .pm-breakdown-page .alloc .sf{font-size:15px;}
-  .pm-breakdown-page .alloc h4{font-size:10px;}
-  .pm-breakdown-page .alloc .occ,
-  .pm-breakdown-page .alloc .foot{font-size:8.5px;}
-  .pm-schematic-svg .holdroom-svg{
+  .pm-second-page .pm-allocation-grid .alloc{
+    padding:7px 9px;
+  }
+  .pm-second-page .pm-allocation-grid .sf{
+    margin-top:3px;
+  }
+  .pm-second-page .pm-allocation-grid .foot{
+    margin-top:2px;
+  }
+  .pm-second-page .pm-allocation-grid .bar{
+    height:4px;
+    margin-top:5px;
+  }
+
+  .pm-gate-one{
+    flex:1;
+    min-height:0;
+    display:flex;
+    flex-direction:column;
+    padding-top:3px;
+  }
+  .pm-gate-one .pm-schematic-heading{
+    margin-bottom:6px;
+    padding-bottom:5px;
+  }
+  .pm-gate-one .pm-schematic-title{
+    font-size:15px;
+  }
+  .pm-gate-one .pm-schematic-meta,
+  .pm-gate-one .pm-meta{
+    font-size:10px;
+  }
+  .pm-gate-one .pm-schematic-svg{
+    flex:1;
+    min-height:0;
+  }
+  .pm-gate-one .pm-schematic-svg .holdroom-svg{
     width:100%;
     height:auto;
-    max-height:8.45in;
+    max-height:6.45in;
+  }
+  .pm-gate-one .pm-foot{
+    margin-top:4px;
+    font-size:9px;
+  }
+
+  .pm-schematic-page{
+    display:flex;
+    flex-direction:column;
+  }
+  .pm-schematic-page .pm-schematic-svg{
+    flex:1;
+    min-height:0;
+  }
+  .pm-schematic-page .pm-schematic-svg .holdroom-svg{
+    width:100%;
+    height:auto;
+    max-height:8.75in;
   }
 }
 .print-memo{display:none;}
-.pm-summary-page,.pm-breakdown-page,.pm-schematic-page{background:#fff;color:var(--text);}
+.pm-first-page,.pm-second-page,.pm-schematic-page{background:#fff;color:var(--text);}
 .pm-title{font-size:20px;font-weight:700;color:var(--rsh-navy);margin-bottom:4px;}
 .pm-meta{font-size:12px;color:var(--muted);margin-bottom:16px;}
 .pm-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsh-blue);margin:14px 0 6px;}
@@ -314,13 +429,11 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .pm-page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:8px;margin-bottom:12px;}
 .pm-page-title{font-size:19px;font-weight:700;color:var(--rsh-navy);}
 .pm-page-meta{font-size:11px;color:var(--muted);text-align:right;}
-.pm-schematic-page{display:flex;flex-direction:column;}
 .pm-schematic-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:8px;margin-bottom:12px;}
 .pm-schematic-title{font-size:19px;font-weight:700;color:var(--rsh-navy);}
 .pm-schematic-meta{font-size:11px;color:var(--muted);text-align:right;}
-.pm-schematic-svg{flex:1;display:flex;align-items:center;justify-content:center;}
+.pm-schematic-svg{display:flex;align-items:center;justify-content:center;}
 .pm-schematic-svg svg{display:block;width:100%;height:auto;}
-.pm-breakdown-page .pm-allocation-wrap{margin-top:14px;}
 
 @media(max-width:920px){
   .layout{grid-template-columns:1fr;}
@@ -1415,29 +1528,32 @@ function buildPrintMemo(){
   const range=r.isRange, m=scenarioMeta();
   const frameworkLabel = range ? 'IATA ADRM v11' : 'ACRP';
   const memoMeta = `${m.airport?m.airport+' · ':''}${frameworkLabel} · ${m.los}`;
+  const totalProgram = `${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf`;
 
   const gateRows=r.gates.map((g,i)=>{
     const cl=adgInfo(g.adg);
     return `<tr><td>Gate ${i+1}</td><td>${AIRLINE_LOOKUP[g.airline]||g.airline||'—'}</td><td>${g.acModel||g.icao||'—'}</td><td class="r">${+g.seats||0}</td><td>ADG ${cl.label}</td><td class="r">${cl.positions}</td></tr>`;
   }).join('');
 
-  // Reuse the currently rendered calculation and allocation sections so the
-  // PDF remains consistent with the dashboard values shown on screen.
+  // Reuse the rendered dashboard values so the PDF matches the current scenario.
   const breakdownTable = document.getElementById('breakdownTable');
   const allocationGrid = document.getElementById('allocGrid');
   const breakdownMarkup = breakdownTable ? breakdownTable.innerHTML : '';
   const allocationMarkup = allocationGrid ? allocationGrid.innerHTML : '';
 
-  // Capture every active gate schematic using the same SVG renderer as the dashboard.
+  // Capture all gate schematics.
   const originalGateTab = state.activeGateTab;
   const svgWrap = document.getElementById('svgWrap');
-  const schematicPages = r.gates.map((g,i)=>{
+
+  const gateSchematics = r.gates.map((g,i)=>{
     const cl=adgInfo(g.adg);
     renderSVG(r,i);
     const schematicSvg = svgWrap ? svgWrap.innerHTML : '';
     const airline = AIRLINE_LOOKUP[g.airline] || g.airline || '—';
-    return `
-      <section class="pm-schematic-page">
+
+    return {
+      gateNumber: i + 1,
+      markup: `
         <div class="pm-schematic-heading">
           <div>
             <div class="pm-schematic-title">Holdroom Spatial Schematic — Gate ${i+1}</div>
@@ -1449,24 +1565,33 @@ function buildPrintMemo(){
           </div>
         </div>
         <div class="pm-schematic-svg">${schematicSvg}</div>
-        <div class="pm-foot">Gate ${i+1} planning schematic. Areas are proportional planning representations and require project-specific validation before design use.</div>
-      </section>`;
-  }).join('');
+        <div class="pm-foot">Gate ${i+1} planning schematic. Areas are proportional planning representations and require project-specific validation before design use.</div>`
+    };
+  });
 
-  // Restore the dashboard to the gate the user had selected before exporting.
   state.activeGateTab = originalGateTab;
   renderSVG(r, originalGateTab);
   renderGateTabs();
 
+  const gateOneMarkup = gateSchematics.length
+    ? `<div class="pm-gate-one">${gateSchematics[0].markup}</div>`
+    : '';
+
+  const remainingGatePages = gateSchematics.slice(1).map((gate,index,array)=>{
+    const isLast = index === array.length - 1;
+    return `<section class="pm-schematic-page${isLast?' pm-last-page':''}">${gate.markup}</section>`;
+  }).join('');
+
   document.getElementById('printMemo').innerHTML=`
-    <section class="pm-summary-page">
+    <section class="pm-first-page">
       <div class="pm-title">RS&H Holdroom Space Program</div>
       <div class="pm-meta">${memoMeta}</div>
+
       <div class="pm-section-title">Program Summary</div>
       <table class="pm-table">
         <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
         <tbody>
-          <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
+          <tr><td>Total Holdroom Area</td><td class="r">${totalProgram}</td></tr>
           <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
           <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
           <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
@@ -1476,31 +1601,26 @@ function buildPrintMemo(){
           <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
         </tbody>
       </table>
+
       <div class="pm-section-title">Gate Configuration</div>
       <table class="pm-table">
         <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
         <tbody>${gateRows}</tbody>
       </table>
-      <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis. Planning-level estimates for internal study; validate with a licensed professional before design or contractual use.</div>
-    </section>
 
-    <section class="pm-breakdown-page">
-      <div class="pm-page-heading">
-        <div>
-          <div class="pm-page-title">Space Calculation Breakdown</div>
-          <div class="pm-meta">${memoMeta}</div>
-        </div>
-        <div class="pm-page-meta">Total program: ${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</div>
-      </div>
+      <div class="pm-print-section-heading">Space Calculation Breakdown</div>
       <table class="breakdown pm-breakdown-table">${breakdownMarkup}</table>
-      <div class="pm-allocation-wrap">
-        <div class="pm-section-title">Zone Allocation — Occupant Split</div>
-        <div class="alloc-grid pm-allocation-grid">${allocationMarkup}</div>
-      </div>
-      <div class="pm-foot">Component values and occupant allocations reflect the active planning framework and assumptions shown in the dashboard at the time of export.</div>
+      <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis.</div>
     </section>
 
-    ${schematicPages}`;
+    <section class="pm-second-page">
+      <div class="pm-print-section-heading">Zone Allocation — Occupant Split</div>
+      <div class="pm-meta">${memoMeta} · Total program: ${totalProgram}</div>
+      <div class="alloc-grid pm-allocation-grid">${allocationMarkup}</div>
+      ${gateOneMarkup}
+    </section>
+
+    ${remainingGatePages}`;
 }
 function exportPDF(){ buildPrintMemo(); requestAnimationFrame(()=>window.print()); }
 
