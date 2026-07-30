@@ -125,16 +125,16 @@ input[type="number"].slider-val::-webkit-outer-spin-button,input[type="number"].
 .card-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--rsh-dark-gray);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
 
 /* BREAKDOWN TABLE */
-table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;font-family:var(--font);}
 table.breakdown th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-bottom:1.5px solid var(--border-strong);}
 table.breakdown th.r,table.breakdown td.r{text-align:right;}
 table.breakdown td{padding:9px 9px;border-bottom:1px solid var(--border);vertical-align:top;}
 table.breakdown tr[data-zone]{cursor:default;transition:background .12s;}
 table.breakdown tr[data-zone]:hover,table.breakdown tr.row-active{background:var(--rsh-blue-tint-2);}
 .bd-name{font-weight:600;color:var(--text);}
-.bd-formula{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px;}
-.bd-val{font-family:var(--mono);font-weight:600;color:var(--text);white-space:nowrap;}
-.bd-pct{font-family:var(--mono);font-size:11px;color:var(--muted);}
+.bd-formula{font-family:var(--font);font-size:11px;color:var(--muted);margin-top:2px;}
+.bd-val{font-family:var(--font);font-weight:600;color:var(--text);white-space:nowrap;}
+.bd-pct{font-family:var(--font);font-size:11px;color:var(--muted);}
 table.breakdown tr.subtotal td{border-top:1.5px solid var(--border-strong);font-weight:700;background:var(--surface-2);}
 table.breakdown tr.deduct td{color:var(--rsh-plum);}
 table.breakdown tr.deduct .bd-val{color:var(--rsh-plum);}
@@ -269,65 +269,140 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
   html,body{background:#fff!important;width:8.5in;}
   body>*:not(.print-memo){display:none!important;}
   .print-memo{display:block!important;}
+
   .pm-summary-page,.pm-breakdown-page,.pm-schematic-page{
     width:100%;
-    height:10.16in;
     box-sizing:border-box;
-    overflow:hidden;
     break-after:page;
     page-break-after:always;
     break-inside:avoid;
     page-break-inside:avoid;
   }
-  .pm-schematic-page:last-child{break-after:auto;page-break-after:auto;}
-
-  .pm-summary-page .pm-section-title{margin-top:24px;margin-bottom:9px;}
-  .pm-summary-page .pm-table{margin-bottom:18px;}
-
-  .pm-breakdown-page .pm-page-heading{margin-bottom:16px;}
-  .pm-breakdown-page .pm-detail-section + .pm-detail-section{margin-top:18px;}
-  .pm-breakdown-page .pm-detail-section-title{
-    font-size:12px;
-    line-height:1.25;
-    margin-bottom:8px;
+  .pm-summary-page,.pm-breakdown-page{
+    height:10.2in;
+    overflow:hidden;
   }
-  .pm-breakdown-page table.breakdown{font-size:12px;line-height:1.25;}
-  .pm-breakdown-page table.breakdown th{font-size:10.5px;padding:4px 6px;}
-  .pm-breakdown-page table.breakdown td{padding:4px 6px;}
-  .pm-breakdown-page .bd-name,.pm-breakdown-page .bd-val{font-size:12px;}
-  .pm-breakdown-page .bd-formula{font-size:10.5px;line-height:1.2;margin-top:1px;}
-  .pm-breakdown-page .bd-pct{font-size:11px;}
+  .pm-schematic-page{min-height:10.2in;}
+  .pm-schematic-page:last-child{
+    break-after:auto;
+    page-break-after:auto;
+  }
 
-  .pm-breakdown-page .alloc-grid{grid-template-columns:repeat(3,1fr);gap:8px;}
-  .pm-breakdown-page .alloc{padding:9px 10px;}
+  .pm-summary-page .pm-section-block{margin-top:18px;}
+  .pm-summary-page .pm-section-block:first-of-type{margin-top:20px;}
+  .pm-summary-page .pm-table{
+    font-size:12px;
+    margin-bottom:0;
+    line-height:1.2;
+  }
+  .pm-summary-page .pm-table th,
+  .pm-summary-page .pm-table td{padding:4px 7px;}
+  .pm-summary-page .pm-table thead th{font-size:10px;}
+
+  .pm-framework-block{margin-top:20px!important;}
+  .pm-framework-table{
+    width:100%;
+    table-layout:fixed;
+    border-collapse:collapse;
+    font-family:var(--font);
+    font-size:8.2px;
+    line-height:1.16;
+  }
+  .pm-framework-table th,
+  .pm-framework-table td{
+    border:1px solid var(--border);
+    padding:3px 5px;
+    vertical-align:top;
+    text-align:left;
+  }
+  .pm-framework-table thead th{
+    background:var(--rsh-navy);
+    color:#fff;
+    font-size:7.8px;
+    text-transform:uppercase;
+    letter-spacing:.02em;
+  }
+  .pm-framework-table thead th.acrp-h{background:var(--rsh-blue);}
+  .pm-framework-table thead th.iata-h{background:#0a7c73;}
+  .pm-framework-table td.feat{
+    width:19%;
+    font-weight:700;
+    color:var(--rsh-dark-gray);
+    background:var(--surface-2);
+  }
+
+  .pm-breakdown-page .pm-page-title{font-size:21px;}
+  .pm-breakdown-page table.breakdown{
+    font-family:var(--font);
+    font-size:12px;
+    line-height:1.28;
+  }
+  .pm-breakdown-page table.breakdown th{
+    font-family:var(--font);
+    font-size:10.5px;
+    padding:6px 7px;
+  }
+  .pm-breakdown-page table.breakdown td{
+    font-family:var(--font);
+    font-size:12px;
+    padding:6px 7px;
+  }
+  .pm-breakdown-page .bd-name,
+  .pm-breakdown-page .bd-val{
+    font-family:var(--font);
+    font-size:12px;
+  }
+  .pm-breakdown-page .bd-formula{
+    font-family:var(--font);
+    font-size:10.5px;
+    line-height:1.22;
+  }
+  .pm-breakdown-page .bd-pct{
+    font-family:var(--font);
+    font-size:11px;
+  }
+
+  .pm-breakdown-page .pm-allocation-wrap{margin-top:26px;}
+  .pm-breakdown-page .pm-section-title{
+    font-size:12px;
+    margin:0 0 10px;
+    letter-spacing:.05em;
+  }
+  .pm-breakdown-page .alloc-grid{
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .pm-breakdown-page .alloc{padding:12px 13px;}
   .pm-breakdown-page .alloc h4,
   .pm-breakdown-page .alloc .occ,
-  .pm-breakdown-page .alloc .foot{font-size:12px;line-height:1.25;}
-  .pm-breakdown-page .alloc .sf{font-size:18px;margin-top:4px;}
-  .pm-breakdown-page .alloc .bar{margin-top:6px;}
+  .pm-breakdown-page .alloc .foot{
+    font-family:var(--font);
+    font-size:12px;
+    line-height:1.22;
+  }
+  .pm-breakdown-page .alloc .sf{
+    font-family:var(--font);
+    font-size:18px;
+  }
 
-  .pm-framework-intro{font-size:10px;line-height:1.35;margin:0 0 7px;color:var(--rsh-dark-gray);}
-  .pm-framework-table-wrap{overflow:hidden;border:1px solid var(--border);border-radius:6px;}
-  .pm-framework-table-wrap table.edu{font-size:9px;line-height:1.2;border-collapse:collapse;}
-  .pm-framework-table-wrap table.edu th,
-  .pm-framework-table-wrap table.edu td{padding:4px 5px;line-height:1.2;}
-  .pm-framework-table-wrap table.edu thead th{font-size:8.5px;position:static;}
-  .pm-framework-table-wrap table.edu td.feat{width:19%;}
-
-  .pm-schematic-svg .holdroom-svg{width:100%;height:auto;max-height:8.45in;}
+  .pm-schematic-svg .holdroom-svg{
+    width:100%;
+    height:auto;
+    max-height:8.65in;
+  }
 }
 .print-memo{display:none;}
 .pm-summary-page,.pm-breakdown-page,.pm-schematic-page{background:#fff;color:var(--text);}
-.pm-title{font-size:21px;font-weight:700;color:var(--rsh-navy);margin-bottom:5px;}
-.pm-meta{font-size:12px;color:var(--muted);margin-bottom:18px;}
-.pm-section-title,.pm-detail-section-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--rsh-blue);}
-.pm-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
-.pm-table th,.pm-table td{padding:7px 9px;border:1px solid #ddd;text-align:left;}
+.pm-title{font-size:20px;font-weight:700;color:var(--rsh-navy);margin-bottom:4px;}
+.pm-meta{font-size:12px;color:var(--muted);margin-bottom:0;}
+.pm-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsh-blue);margin:0 0 7px;}
+.pm-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:0;}
+.pm-table th,.pm-table td{padding:6px 9px;border:1px solid #ddd;text-align:left;}
 .pm-table thead th{background:var(--rsh-navy);color:#fff;font-size:10.5px;text-transform:uppercase;}
 .pm-table tr.tot td{font-weight:700;background:var(--rsh-blue-tint-2);color:var(--rsh-navy);}
-.pm-foot{font-size:10px;color:var(--muted);margin-top:14px;line-height:1.5;}
-.pm-page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:9px;margin-bottom:14px;}
-.pm-page-title{font-size:20px;font-weight:700;color:var(--rsh-navy);}
+.pm-foot{font-size:8.8px;color:var(--muted);margin-top:10px;line-height:1.35;}
+.pm-page-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:9px;margin-bottom:22px;}
+.pm-page-title{font-size:19px;font-weight:700;color:var(--rsh-navy);}
 .pm-page-meta{font-size:11px;color:var(--muted);text-align:right;}
 .pm-schematic-page{display:flex;flex-direction:column;}
 .pm-schematic-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:8px;margin-bottom:12px;}
@@ -335,6 +410,7 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .pm-schematic-meta{font-size:11px;color:var(--muted);text-align:right;}
 .pm-schematic-svg{flex:1;display:flex;align-items:center;justify-content:center;}
 .pm-schematic-svg svg{display:block;width:100%;height:auto;}
+.pm-breakdown-page .pm-allocation-wrap{margin-top:26px;}
 
 @media(max-width:920px){
   .layout{grid-template-columns:1fr;}
@@ -1438,11 +1514,9 @@ function buildPrintMemo(){
   const breakdownTable = document.getElementById('breakdownTable');
   const allocationGrid = document.getElementById('allocGrid');
   const frameworkTable = document.querySelector('table.edu');
-  const frameworkLead = document.querySelector('.edu-body .lead');
   const breakdownMarkup = breakdownTable ? breakdownTable.innerHTML : '';
   const allocationMarkup = allocationGrid ? allocationGrid.innerHTML : '';
-  const frameworkMarkup = frameworkTable ? frameworkTable.outerHTML : '';
-  const frameworkIntro = frameworkLead ? frameworkLead.innerHTML : '';
+  const frameworkMarkup = frameworkTable ? frameworkTable.innerHTML : '';
 
   const originalGateTab = state.activeGateTab;
   const svgWrap = document.getElementById('svgWrap');
@@ -1476,52 +1550,57 @@ function buildPrintMemo(){
     <section class="pm-summary-page">
       <div class="pm-title">RS&H Holdroom Space Program</div>
       <div class="pm-meta">${memoMeta}</div>
-      <div class="pm-section-title">Program Summary</div>
-      <table class="pm-table">
-        <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
-        <tbody>
-          <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
-          <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
-          <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
-          <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
-          <tr><td>Seating Ratio</td><td class="r">${pct(state.seatingRatio)}</td></tr>
-          <tr><td>Corridor Width</td><td class="r">${state.corridorWidth} ft</td></tr>
-          <tr><td>Shared-Gate Discount</td><td class="r">${pct(state.comboPct)}</td></tr>
-          <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
-        </tbody>
-      </table>
-      <div class="pm-section-title">Gate Configuration</div>
-      <table class="pm-table">
-        <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
-        <tbody>${gateRows}</tbody>
-      </table>
+
+      <div class="pm-section-block">
+        <div class="pm-section-title">Program Summary</div>
+        <table class="pm-table">
+          <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
+          <tbody>
+            <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
+            <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
+            <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
+            <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
+            <tr><td>Seating Ratio</td><td class="r">${pct(state.seatingRatio)}</td></tr>
+            <tr><td>Corridor Width</td><td class="r">${state.corridorWidth} ft</td></tr>
+            <tr><td>Shared-Gate Discount</td><td class="r">${pct(state.comboPct)}</td></tr>
+            <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pm-section-block">
+        <div class="pm-section-title">Gate Configuration</div>
+        <table class="pm-table">
+          <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
+          <tbody>${gateRows}</tbody>
+        </table>
+      </div>
+
+      <div class="pm-section-block pm-framework-block">
+        <div class="pm-section-title">ACRP vs. IATA — Framework Reference</div>
+        <table class="pm-framework-table">${frameworkMarkup}</table>
+      </div>
+
       <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis. Planning-level estimates for internal study; validate with a licensed professional before design or contractual use.</div>
     </section>
 
     <section class="pm-breakdown-page">
       <div class="pm-page-heading">
         <div>
-          <div class="pm-page-title">Holdroom Planning Detail</div>
+          <div class="pm-page-title">Space Calculation Breakdown</div>
           <div class="pm-meta">${memoMeta}</div>
         </div>
         <div class="pm-page-meta">Total program: ${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</div>
       </div>
 
-      <div class="pm-detail-section pm-breakdown-section">
-        <div class="pm-detail-section-title">Space Calculation Breakdown</div>
-        <table class="breakdown pm-breakdown-table">${breakdownMarkup}</table>
-      </div>
+      <table class="breakdown pm-breakdown-table">${breakdownMarkup}</table>
 
-      <div class="pm-detail-section pm-allocation-section">
-        <div class="pm-detail-section-title">Zone Allocation - Occupant Split</div>
+      <div class="pm-allocation-wrap">
+        <div class="pm-section-title">Zone Allocation — Occupant Split</div>
         <div class="alloc-grid pm-allocation-grid">${allocationMarkup}</div>
       </div>
 
-      <div class="pm-detail-section pm-framework-section">
-        <div class="pm-detail-section-title">ACRP vs. IATA - Framework Reference</div>
-        <p class="pm-framework-intro">${frameworkIntro}</p>
-        <div class="pm-framework-table-wrap">${frameworkMarkup}</div>
-      </div>
+      <div class="pm-foot">Component values and occupant allocations reflect the active planning framework and assumptions shown in the dashboard at the time of export.</div>
     </section>
 
     ${schematicPages}`;
