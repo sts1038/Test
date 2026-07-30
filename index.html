@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RS&H — Holdroom Capacity Dashboard V4</title>
+<!-- Tailwind CDN removed; all styles use custom CSS below -->
+<style>
+:root{
+  --rsh-blue:#215eac;--rsh-golden:#febc11;--rsh-plum:#a1225d;--rsh-green:#0ba89c;
+  --rsh-light-blue:#85c7ee;--rsh-navy:#103254;--rsh-dark-gray:#415465;--rsh-light-gray:#a8a6a8;
+  --rsh-golden-tint:#fce9c4;--rsh-blue-tint-1:#b7dbf4;--rsh-blue-tint-2:#d7eaf9;
+  --rsh-gradient:linear-gradient(45deg,#215eac 0%,#0ba89c 50%,#febc11 85%,#fce9c4 100%);
+  --bg:#eef1f5;--surface:#ffffff;--surface-2:#f5f7fa;--border:#d9dfe8;--border-strong:#c2cad7;
+  --text:#28323f;--muted:#6c7889;
+  --font:'Segoe UI',system-ui,-apple-system,'Helvetica Neue',sans-serif;
+  --mono:ui-monospace,'Cascadia Code','Consolas','SFMono-Regular',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html{scroll-behavior:smooth;}
+body{background:var(--bg);color:var(--text);font-family:var(--font);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased;}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:'tnum';}
+.mono{font-family:var(--mono);}
+
+/* HEADER */
+.gradient-rule{height:4px;background:var(--rsh-gradient);}
+.app-header{background:var(--rsh-navy);color:#fff;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px 26px;}
+.brand{display:flex;align-items:center;gap:14px;min-width:0;}
+.wordmark{display:block;}
+.header-center{text-align:center;flex:1;min-width:0;}
+.header-center h1{font-size:16px;font-weight:600;letter-spacing:.01em;}
+.header-center p{font-size:12px;color:#b9c6d6;font-weight:400;margin-top:1px;}
+.header-right{display:flex;align-items:center;gap:10px;}
+.fw-pill{display:inline-flex;align-items:center;gap:0;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);border-radius:7px;overflow:hidden;padding:2px;}
+.fw-pill button{border:none;background:transparent;color:#cdd8e6;cursor:pointer;font-family:var(--font);font-size:12.5px;font-weight:600;padding:6px 12px;border-radius:5px;transition:all .15s;}
+.fw-pill button.active{background:#fff;color:var(--rsh-navy);}
+.info-btn{width:30px;height:30px;border-radius:6px;cursor:pointer;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.22);color:#fff;font-size:15px;font-weight:600;line-height:1;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;}
+.info-btn:hover{background:rgba(255,255,255,.2);}
+
+/* AIRPORT BAR */
+.airport-bar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 26px;}
+.ab-inner{display:flex;align-items:center;gap:20px;flex-wrap:wrap;}
+.ab-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsh-blue);white-space:nowrap;}
+.ab-left{display:flex;align-items:center;gap:10px;}
+#airportCode{width:220px;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 12px;font-family:var(--mono);font-size:14px;letter-spacing:.14em;text-transform:uppercase;color:var(--text);outline:none;transition:border-color .15s,box-shadow .15s;}
+#airportCode:focus{border-color:var(--rsh-blue);box-shadow:0 0 0 3px var(--rsh-blue-tint-2);}
+#airportCode::placeholder{letter-spacing:normal;text-transform:none;color:var(--muted);font-family:var(--font);}
+.ab-details{display:flex;align-items:center;gap:0;flex-wrap:wrap;}
+.ab-name{font-size:14.5px;font-weight:700;color:var(--rsh-navy);padding-left:16px;border-left:3px solid var(--rsh-green);}
+.ab-meta-chips{display:flex;gap:6px;margin-left:14px;flex-wrap:wrap;}
+.ab-chip{font-size:11px;font-weight:700;font-family:var(--mono);padding:3px 8px;border-radius:4px;background:var(--rsh-blue-tint-2);color:var(--rsh-blue);}
+.ab-chip.hub{background:#d6f3f0;color:#0a7c73;}
+.ab-chip.wiki{background:#fce9c4;color:#8a5d00;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:4px;}
+.ab-chip.wiki:hover{background:#febc11;color:#103254;}
+
+/* LAYOUT */
+.layout{display:grid;grid-template-columns:360px 1fr;align-items:start;}
+.sidebar{background:var(--surface);border-right:1px solid var(--border);padding:22px;height:calc(100vh - 113px);position:sticky;top:0;overflow-y:auto;}
+.content{padding:26px 30px 60px;min-height:calc(100vh - 113px);}
+
+/* SIDEBAR */
+.panel-label{font-size:11px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--rsh-blue);margin-bottom:12px;padding-bottom:7px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
+.panel-label .uptick{flex:0 0 auto;}
+.sb-section{margin-bottom:24px;}
+.field{margin-bottom:13px;}
+.field-label{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:12.5px;font-weight:600;color:var(--rsh-dark-gray);margin-bottom:5px;}
+.field-hint{font-size:11px;font-weight:400;color:var(--muted);}
+input[type="number"],select{width:100%;background:var(--surface-2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:var(--mono);font-size:14px;padding:8px 10px;outline:none;transition:border-color .15s,box-shadow .15s;}
+input[type="number"]:focus,select:focus{border-color:var(--rsh-blue);box-shadow:0 0 0 3px var(--rsh-blue-tint-2);}
+select{font-family:var(--font);font-weight:600;cursor:pointer;}
+.slider-row{display:grid;grid-template-columns:1fr 82px;gap:10px;align-items:center;}
+.slider-row>*{min-width:0;}
+input[type="range"]{-webkit-appearance:none;appearance:none;width:100%;height:4px;background:var(--border-strong);border-radius:3px;outline:none;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:16px;height:16px;border-radius:50%;background:var(--rsh-blue);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.25);}
+input[type="range"]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--rsh-blue);cursor:pointer;border:2px solid #fff;}
+.slider-val{text-align:center;font-family:var(--mono);font-size:13px;padding:6px 6px;width:100%;}
+input[type="number"].slider-val{-moz-appearance:textfield;appearance:textfield;}
+input[type="number"].slider-val::-webkit-outer-spin-button,input[type="number"].slider-val::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+/* GATE MODULES */
+.gate-module{background:var(--surface-2);border:1px solid var(--border);border-radius:10px;margin-bottom:12px;overflow:hidden;}
+.gate-module-header{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--rsh-navy);cursor:pointer;user-select:none;}
+.gate-tag{font-family:var(--mono);font-size:12px;font-weight:700;color:#fff;background:var(--rsh-blue);padding:3px 9px;border-radius:4px;}
+.gate-module-header .gm-title{font-size:12px;font-weight:600;color:#b9c6d6;flex:1;}
+.gate-module-header .gm-seats{font-family:var(--mono);font-size:11px;color:var(--rsh-golden);}
+.gate-module-body{padding:12px;}
+.mini-label{font-size:10.5px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;}
+.aircraft-popup{background:#fff;border:1.5px solid var(--rsh-blue);border-radius:7px;padding:0;margin-top:6px;overflow:hidden;max-height:200px;}
+.aircraft-popup select{border:none;border-radius:0;font-size:12.5px;background:#fff;padding:8px 10px;}
+.aircraft-popup select:focus{box-shadow:none;}
+.adg-hint{font-size:11px;color:var(--muted);margin-top:8px;padding-top:8px;border-top:1px dashed var(--border);display:flex;gap:6px;align-items:baseline;}
+.adg-badge{font-family:var(--mono);font-weight:700;color:var(--rsh-blue);white-space:nowrap;}
+.podium-info{font-size:11px;background:var(--rsh-blue-tint-2);border-radius:5px;padding:6px 9px;margin-top:8px;display:flex;gap:8px;align-items:center;color:var(--rsh-navy);}
+.podium-info strong{font-family:var(--mono);}
+.gate-card input[type="number"]{background:#fff;}
+
+/* GATE TABS on results side */
+.gate-tabs{display:flex;gap:0;border-bottom:2px solid var(--border);margin-bottom:16px;}
+.gate-tab{padding:8px 16px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all .15s;background:none;border-top:none;border-left:none;border-right:none;font-family:var(--font);}
+.gate-tab.active{color:var(--rsh-blue);border-bottom-color:var(--rsh-blue);}
+.gate-tab:hover:not(.active){color:var(--rsh-dark-gray);}
+
+/* RESULTS */
+.results-bar{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-bottom:20px;flex-wrap:wrap;}
+.results-bar h2{font-size:19px;font-weight:600;}
+.results-meta{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.fw-chip{display:inline-block;font-family:var(--mono);font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;letter-spacing:.04em;}
+.fw-chip.acrp{background:var(--rsh-blue-tint-2);color:var(--rsh-blue);}
+.fw-chip.iata{background:#d6f3f0;color:#0a7c73;}
+.kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:13px;margin-bottom:24px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:15px 17px;position:relative;overflow:hidden;}
+.kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--rsh-blue);}
+.kpi.k-green::before{background:var(--rsh-green);}
+.kpi.k-navy::before{background:var(--rsh-navy);}
+.kpi.k-plum::before{background:var(--rsh-plum);}
+.kpi-label{font-size:12px;color:var(--muted);margin-bottom:6px;font-weight:600;}
+.kpi-value{font-size:25px;font-weight:700;font-family:var(--font);color:var(--rsh-blue);letter-spacing:-.01em;}
+.kpi.k-green .kpi-value{color:var(--rsh-green);}
+.kpi.k-navy .kpi-value{color:var(--rsh-navy);}
+.kpi.k-plum .kpi-value{color:var(--rsh-plum);}
+.kpi-sub{font-size:11.5px;color:var(--muted);margin-top:3px;}
+.grid-2{display:grid;grid-template-columns:1.15fr 1fr;gap:22px;align-items:start;}
+@media(max-width:1100px){.grid-2{grid-template-columns:1fr;}}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:18px 20px;margin-bottom:22px;}
+.card-title{font-size:12px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--rsh-dark-gray);margin-bottom:14px;display:flex;align-items:center;gap:9px;}
+
+/* UPTICK CARD ACCENT */
+.card-uptick-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+.card-uptick-header .card-title{margin-bottom:0;}
+.uptick-trim{display:flex;align-items:flex-end;gap:0;flex-shrink:0;}
+
+/* BREAKDOWN TABLE */
+table.breakdown{width:100%;border-collapse:collapse;font-size:13.5px;}
+table.breakdown th{text-align:left;font-size:10.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);padding:7px 9px;border-bottom:1.5px solid var(--border-strong);}
+table.breakdown th.r,table.breakdown td.r{text-align:right;}
+table.breakdown td{padding:9px 9px;border-bottom:1px solid var(--border);vertical-align:top;}
+table.breakdown tr[data-zone]{cursor:default;transition:background .12s;}
+table.breakdown tr[data-zone]:hover,table.breakdown tr.row-active{background:var(--rsh-blue-tint-2);}
+.bd-name{font-weight:600;color:var(--text);}
+.bd-formula{font-family:var(--mono);font-size:11px;color:var(--muted);margin-top:2px;}
+.bd-val{font-family:var(--mono);font-weight:600;color:var(--text);white-space:nowrap;}
+.bd-pct{font-family:var(--mono);font-size:11px;color:var(--muted);}
+table.breakdown tr.subtotal td{border-top:1.5px solid var(--border-strong);font-weight:700;background:var(--surface-2);}
+table.breakdown tr.deduct td{color:var(--rsh-plum);}
+table.breakdown tr.deduct .bd-val{color:var(--rsh-plum);}
+table.breakdown tr.total td{border-top:2px solid var(--rsh-navy);font-weight:800;background:var(--rsh-blue-tint-2);color:var(--rsh-navy);font-size:14.5px;}
+table.breakdown tr.total .bd-val{color:var(--rsh-navy);}
+
+/* ALLOCATION PANELS */
+.alloc-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.alloc{border:1px solid var(--border);border-radius:8px;padding:13px 15px;background:var(--surface-2);}
+.alloc h4{font-size:12px;color:var(--muted);font-weight:600;}
+.alloc .occ{font-size:11px;color:var(--rsh-blue);font-weight:700;}
+.alloc .sf{font-size:19px;font-weight:700;font-family:var(--font);margin-top:5px;}
+.alloc .foot{font-size:11px;color:var(--muted);margin-top:3px;}
+.alloc.seat .sf{color:var(--rsh-blue);}
+.alloc.stand .sf{color:var(--rsh-green);}
+.alloc.walk .sf{color:var(--rsh-golden);}
+.bar{height:6px;background:var(--border);border-radius:4px;margin-top:8px;overflow:hidden;}
+.bar>i{display:block;height:100%;border-radius:4px;}
+.alloc.seat .bar>i{background:var(--rsh-blue);}
+.alloc.stand .bar>i{background:var(--rsh-green);}
+.alloc.walk .bar>i{background:var(--rsh-golden);}
+
+/* SPATIAL SCHEMATIC */
+.svg-wrap{width:100%;}
+.holdroom-svg{width:100%;height:auto;display:block;}
+.svg-zone{transition:opacity .15s,filter .15s;cursor:default;}
+.svg-zone .zfill{transition:fill .15s,stroke .15s;}
+.svg-zone.dim{opacity:.35;}
+.svg-zone.glow .zfill{stroke-width:2.5;filter:drop-shadow(0 0 5px rgba(33,94,172,.55));}
+.svg-legend{display:flex;flex-wrap:wrap;gap:10px 16px;margin-top:12px;font-size:11.5px;color:var(--muted);}
+.svg-legend span{display:inline-flex;align-items:center;gap:6px;}
+.swatch{width:11px;height:11px;border-radius:2px;display:inline-block;border:1px solid rgba(0,0,0,.12);}
+.gate-tab-label{font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--rsh-dark-gray);margin-bottom:10px;}
+
+/* GUT CHECK */
+.gutcheck{display:flex;align-items:center;gap:10px;font-size:12.5px;padding:10px 13px;border-radius:8px;margin-top:14px;}
+.gutcheck.ok{background:#def0ec;color:#0a6d65;}
+.gutcheck.warn{background:#fdeccb;color:#8a5d00;}
+.gutcheck.na{background:var(--surface-2);color:var(--muted);}
+.gutcheck b{font-family:var(--mono);}
+
+/* EXPORTS */
+.export-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+@media(max-width:760px){.export-bar{grid-template-columns:1fr 1fr;}}
+.export-btn{display:flex;flex-direction:column;gap:3px;text-align:left;background:var(--surface);border:1px solid var(--border-strong);border-radius:9px;padding:13px 15px;cursor:pointer;transition:all .15s;font-family:var(--font);}
+.export-btn:hover{border-color:var(--rsh-blue);transform:translateY(-1px);box-shadow:0 4px 14px rgba(33,94,172,.12);}
+.export-btn .et{font-size:13.5px;font-weight:700;color:var(--rsh-navy);display:flex;align-items:center;gap:7px;}
+.export-btn .ed{font-size:11px;color:var(--muted);}
+.export-btn .ic{width:18px;height:18px;flex:0 0 auto;}
+
+/* FOOTER */
+.footer-disc{background:var(--surface);border-top:1px solid var(--border);padding:14px 30px;font-size:11.5px;color:var(--muted);line-height:1.6;}
+#srcNote strong{color:var(--rsh-dark-gray);}
+
+/* MODAL */
+.overlay{display:none;position:fixed;inset:0;background:rgba(16,50,84,.55);z-index:1000;align-items:center;justify-content:center;}
+.overlay.open{display:flex;}
+.modal{background:#fff;border-radius:12px;max-width:680px;width:94%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.28);}
+.modal-header{background:var(--rsh-navy);color:#fff;padding:18px 22px;display:flex;align-items:center;justify-content:space-between;}
+.modal-header h3{font-size:16px;font-weight:700;}
+.modal-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;opacity:.7;}
+.modal-close:hover{opacity:1;}
+.modal-tabs{display:flex;gap:0;border-bottom:1px solid var(--border);}
+.modal-tab{flex:1;padding:11px;font-size:13px;font-weight:600;color:var(--muted);cursor:pointer;background:none;border:none;border-bottom:3px solid transparent;font-family:var(--font);transition:all .15s;}
+.modal-tab.active{color:var(--rsh-blue);border-bottom-color:var(--rsh-blue);}
+.modal-body{overflow-y:auto;padding:22px;}
+.modal-pane{display:none;}
+.modal-pane.active{display:block;}
+.modal-pane h4{font-size:14px;font-weight:700;color:var(--rsh-navy);margin-bottom:8px;}
+.modal-pane p{font-size:13px;color:var(--rsh-dark-gray);line-height:1.65;}
+
+/* EDUCATIONAL TABLE */
+.edu-card{padding:0;overflow:hidden;}
+.edu-card>summary{list-style:none;cursor:pointer;padding:16px 20px;display:flex;align-items:center;gap:12px;background:var(--surface-2);border-bottom:1px solid var(--border);}
+.edu-card>summary::-webkit-details-marker{display:none;}
+.edu-card>summary .es-title{font-size:14px;font-weight:700;color:var(--rsh-navy);}
+.edu-card>summary .es-sub{font-size:11.5px;color:var(--muted);}
+.edu-card>summary .chev{margin-left:auto;transition:transform .2s;color:var(--rsh-blue);font-size:13px;}
+.edu-card[open]>summary .chev{transform:rotate(180deg);}
+.edu-body{padding:18px 20px 20px;}
+table.edu{width:100%;border-collapse:collapse;font-size:12.5px;}
+table.edu th,table.edu td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--border);vertical-align:top;line-height:1.45;}
+table.edu thead th{background:var(--rsh-navy);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.04em;position:sticky;top:0;}
+table.edu thead th.acrp-h{background:var(--rsh-blue);}
+table.edu thead th.iata-h{background:#0a7c73;}
+table.edu td.feat{font-weight:700;color:var(--rsh-dark-gray);width:20%;background:var(--surface-2);}
+table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
+.edu-table-scroll{overflow-x:auto;border:1px solid var(--border);border-radius:8px;}
+
+
+
+/* TOOLTIP POPUP */
+.tip-overlay{display:none;position:fixed;inset:0;background:rgba(16,50,84,.45);z-index:2000;align-items:center;justify-content:center;}
+.tip-overlay.open{display:flex;}
+.tip-box{background:#fff;border-radius:10px;max-width:520px;width:94%;box-shadow:0 16px 48px rgba(0,0,0,.25);overflow:hidden;}
+.tip-header{background:var(--rsh-navy);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between;}
+.tip-header h4{font-size:14px;font-weight:700;}
+.tip-close{background:none;border:none;color:#fff;font-size:20px;cursor:pointer;opacity:.7;line-height:1;}
+.tip-close:hover{opacity:1;}
+.tip-body{padding:18px 20px;font-size:13px;color:var(--rsh-dark-gray);line-height:1.65;}
+.tip-body strong{color:var(--rsh-navy);}
+.tip-body ul{padding-left:18px;margin-top:6px;}
+.tip-body li{margin-bottom:4px;}
+.tip-body .tip-ref{font-size:11px;color:var(--muted);margin-top:12px;padding-top:10px;border-top:1px dashed var(--border);}
+
+/* INFO ICON BUTTON */
+.info-icon-btn{background:none;border:none;color:var(--rsh-blue);cursor:pointer;font-size:13px;padding:0 2px;line-height:1;opacity:.7;}
+.info-icon-btn:hover{opacity:1;}
+
+/* AIRCRAFT MODAL */
+.ac-modal-overlay{display:none;position:fixed;inset:0;background:rgba(16,50,84,.55);z-index:3000;align-items:center;justify-content:center;}
+.ac-modal-overlay.open{display:flex;}
+.ac-modal{background:#fff;border-radius:12px;max-width:680px;width:94%;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 24px 64px rgba(0,0,0,.28);}
+.ac-modal-header{background:var(--rsh-navy);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;}
+.ac-modal-header h3{font-size:15px;font-weight:700;}
+.ac-modal-close{background:none;border:none;color:#fff;font-size:22px;cursor:pointer;line-height:1;opacity:.7;}
+.ac-modal-close:hover{opacity:1;}
+.ac-modal-body{overflow-y:auto;padding:20px;}
+.ac-modal-title-bar{margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--border);}
+.ac-big-model{font-size:17px;font-weight:700;color:var(--rsh-navy);}
+.ac-big-sub{font-size:12px;color:var(--muted);margin-top:3px;}
+.ac-field-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.ac-field{background:var(--surface-2);border:1px solid var(--border);border-radius:6px;padding:9px 11px;}
+.ac-field.highlight{border-color:var(--rsh-blue);background:var(--rsh-blue-tint-2);}
+.ac-field-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);margin-bottom:3px;}
+.ac-field-value{font-size:13px;font-weight:600;color:var(--text);font-family:var(--mono);}
+.ac-source-note{font-size:11px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px dashed var(--border);}
+
+/* PRINT */
+@media print{
+  .sidebar,.airport-bar,.export-bar,.edu-card,header,.gradient-rule,.footer-disc,.overlay{display:none!important;}
+  .layout{display:block;}
+  .content{padding:0;}
+  .print-memo{display:block;}
+}
+.print-memo{display:none;}
+.pm-title{font-size:20px;font-weight:700;color:var(--rsh-navy);margin-bottom:4px;}
+.pm-meta{font-size:12px;color:var(--muted);margin-bottom:16px;}
+.pm-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsh-blue);margin:14px 0 6px;}
+.pm-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px;}
+.pm-table th,.pm-table td{padding:6px 9px;border:1px solid #ddd;text-align:left;}
+.pm-table thead th{background:var(--rsh-navy);color:#fff;font-size:10.5px;text-transform:uppercase;}
+.pm-table tr.tot td{font-weight:700;background:var(--rsh-blue-tint-2);color:var(--rsh-navy);}
+.pm-foot{font-size:10.5px;color:var(--muted);margin-top:14px;line-height:1.6;}
+
+@media(max-width:920px){
+  .layout{grid-template-columns:1fr;}
+  .sidebar{height:auto;position:static;border-right:none;border-bottom:1px solid var(--border);}
+  .kpi-row{grid-template-columns:1fr 1fr;}
+  .header-center{display:none;}
+  .alloc-grid{grid-template-columns:1fr 1fr;}
+}
+</style>
+</head>
+<body>
+<div class="gradient-rule"></div>
+
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand">
+    <svg class="wordmark" width="116" height="34" viewBox="0 0 116 34" aria-label="RS&H">
+      <text x="0" y="25" font-family="'Segoe UI',sans-serif" font-size="26" font-weight="800" fill="#ffffff" font-style="italic" letter-spacing="-0.5">RS&amp;H</text>
+      <line x1="2" y1="31" x2="86" y2="31" stroke="#85c7ee" stroke-width="2.4"/>
+      <line x1="86" y1="31" x2="112" y2="17.2" stroke="#0ba89c" stroke-width="2.4"/>
+    </svg>
+  </div>
+  <div class="header-center">
+    <h1>RS&amp;H Aviation Planning &amp; Innovation</h1>
+    <p>Holdroom Capacity &amp; Passenger Departure Lounge Programming — V4</p>
+  </div>
+  <div class="header-right">
+    <div class="fw-pill" id="fwPillHeader" role="group">
+      <button id="fwBtnACRP" class="active" onclick="setFramework('ACRP')">ACRP</button>
+      <button id="fwBtnIATA" onclick="setFramework('IATA')">IATA</button>
+    </div>
+    <button class="info-btn" title="Framework reference" onclick="openModal()">&#9432;</button>
+  </div>
+</header>
+
+<!-- AIRPORT LOOKUP BAR -->
+<section class="airport-bar">
+  <div class="ab-inner">
+    <div class="ab-left">
+      <span class="ab-label">Airport</span>
+      <input type="text" id="airportCode" maxlength="3" autocomplete="off" spellcheck="false"
+             placeholder="Enter IATA Code (e.g. ATL, GSP, CLT)" oninput="onAirportInput(this)">
+    </div>
+    <div class="ab-details" id="abDetails"></div>
+  </div>
+</section>
+
+<!-- LAYOUT -->
+<div class="layout">
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+
+    <!-- Framework -->
+    <div class="sb-section">
+      <div class="panel-label">
+        <svg class="uptick" width="22" height="10" viewBox="0 0 22 10"><line x1="0" y1="8" x2="14" y2="8" stroke="#215eac" stroke-width="2"/><line x1="14" y1="8" x2="21" y2="4.3" stroke="#0ba89c" stroke-width="2"/></svg>
+        Planning Framework
+      </div>
+      <div class="field">
+        <div class="field-label">Active standard <span class="field-hint" id="fwHint">North American · component-driven</span></div>
+        <div class="fw-pill" style="width:100%;background:var(--surface-2);border-color:var(--border);">
+          <button id="fwBtnACRP2" class="active" style="flex:1;color:var(--rsh-dark-gray);" onclick="setFramework('ACRP')">ACRP Standard</button>
+          <button id="fwBtnIATA2" style="flex:1;color:var(--rsh-dark-gray);" onclick="setFramework('IATA')">IATA Standard</button>
+        </div>
+      </div>
+      <div class="field" id="acrpLOSField">
+        <div class="field-label">Level of Service <span class="field-hint">sets area + seating defaults</span></div>
+        <select id="acrpLOS" onchange="onLOSChange()">
+          <option value="A">LOS A — Excellent (17 sf seat / 12 sf stand · 60%)</option>
+          <option value="BC" selected>LOS B/C — Standard (15 sf / 10 sf · 50%)</option>
+          <option value="D">LOS D — Adequate (8.6 sf / 8.6 sf · &lt;50%)</option>
+          <option value="E">LOS E — Inadequate (6.5 sf / 6.5 sf · &lt;50%)</option>
+        </select>
+      </div>
+      <div class="field" id="iataLOSField" style="display:none;">
+        <div class="field-label">IATA Comfort Range <span class="field-hint">sets sf/pax bounds</span></div>
+        <select id="iataLOS" onchange="onIATALOSChange()">
+          <option value="optimum" selected>Optimum — 21.5 sf seat / 14.5 sf stand</option>
+          <option value="overdesign">Over-Design — 24.0 sf seat / 16.5 sf stand</option>
+          <option value="suboptimum">Sub-Optimum — 19.0 sf seat / 12.5 sf stand</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Gate Configuration -->
+    <div class="sb-section">
+      <div class="panel-label">
+        <svg class="uptick" width="22" height="10" viewBox="0 0 22 10"><line x1="0" y1="8" x2="14" y2="8" stroke="#215eac" stroke-width="2"/><line x1="14" y1="8" x2="21" y2="4.3" stroke="#0ba89c" stroke-width="2"/></svg>
+        Gate Configuration
+      </div>
+      <div class="field">
+        <div class="field-label">Active gates (peak hour) <span class="field-hint">contact stands in use</span></div>
+        <div class="slider-row">
+          <input type="range" id="numGates" min="1" max="12" value="4" oninput="onNumGates(this.value)">
+          <input type="number" id="numGatesVal" min="1" max="12" value="4" class="slider-val" onchange="onNumGates(this.value)">
+        </div>
+      </div>
+      <div id="gateContainer"></div>
+    </div>
+
+    <!-- Planning Assumptions -->
+    <div class="sb-section">
+      <div class="panel-label">
+        <svg class="uptick" width="22" height="10" viewBox="0 0 22 10"><line x1="0" y1="8" x2="14" y2="8" stroke="#215eac" stroke-width="2"/><line x1="14" y1="8" x2="21" y2="4.3" stroke="#0ba89c" stroke-width="2"/></svg>
+        Planning Assumptions
+      </div>
+
+      <div class="field">
+        <div class="field-label">Load factor <span class="field-hint">(ACRP rec: 80–90%)</span><button type="button" class="info-icon-btn" onclick="showTip('loadFactor')" title="Load factor guidance">&#9432;</button></div>
+        <div class="slider-row">
+          <input type="range" id="loadFactor" min="0.5" max="1" step="0.01" value="0.90" oninput="syncSlider('loadFactor');recompute()">
+          <input type="number" id="loadFactorVal" min="0.5" max="1" step="0.01" value="0.90" class="slider-val" onchange="syncNum('loadFactor');recompute()">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Dwell attendance factor <span class="field-hint">(after call-to-gate)</span><button type="button" class="info-icon-btn" onclick="showTip('dwell')" title="Dwell factor guidance">&#9432;</button></div>
+        <div class="slider-row">
+          <input type="range" id="dwellFactor" min="0.5" max="1" step="0.01" value="0.75" oninput="syncSlider('dwellFactor');recompute()">
+          <input type="number" id="dwellFactorVal" min="0.5" max="1" step="0.01" value="0.75" class="slider-val" onchange="syncNum('dwellFactor');recompute()">
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-label">Seating ratio <span class="field-hint">(% seated vs standing)</span><button type="button" class="info-icon-btn" onclick="showTip('seatingRatio')" title="Seating ratio guidance">&#9432;</button></div>
+        <div class="slider-row">
+          <input type="range" id="seatingRatio" min="0.3" max="0.95" step="0.01" value="0.60" oninput="syncSlider('seatingRatio');recompute()">
+          <input type="number" id="seatingRatioVal" min="0.3" max="0.95" step="0.01" value="0.60" class="slider-val" onchange="syncNum('seatingRatio');recompute()">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">Corridor width <span class="field-hint">ft (6–8 min)</span></div>
+          <input type="number" id="corridorWidth" min="4" max="20" step="1" value="8" onchange="recompute()">
+        </div>
+        <div class="field">
+          <div class="field-label">Frontage / gate <span class="field-hint">ft</span></div>
+          <input type="number" id="corridorLen" min="20" max="120" step="1" value="44" onchange="recompute()">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">Structure % <span class="field-hint">~2%</span></div>
+          <input type="number" id="structurePct" min="0" max="0.1" step="0.005" value="0.02" onchange="recompute()">
+        </div>
+        <div class="field">
+          <div class="field-label">Amenities % <span class="field-hint">~5%</span></div>
+          <input type="number" id="amenitiesPct" min="0" max="0.2" step="0.005" value="0.05" onchange="recompute()">
+        </div>
+      </div>
+
+      <div class="two-col">
+        <div class="field">
+          <div class="field-label">High-util % <span class="field-hint" id="hintHighUtil">(LCC: 10–30%)</span></div>
+          <input type="number" id="highUtilPct" min="0" max="0.4" step="0.01" value="0" onchange="recompute()">
+        </div>
+        <div class="field">
+          <div class="field-label">Shared-gate % <span class="field-hint" id="hintCombo">auto-scaled</span><button type="button" class="info-icon-btn" onclick="showTip('sharedGate')" title="Shared gate discount guidance">&#9432;</button></div>
+          <input type="number" id="comboPct" min="0" max="0.3" step="0.01" value="0.20" onchange="recompute()" id="comboPct">
+        </div>
+      </div>
+      <div id="sharedGateNote" style="font-size:11px;color:var(--rsh-blue);margin-top:-6px;margin-bottom:8px;"></div>
+    </div>
+  </aside>
+
+  <!-- CONTENT -->
+  <main class="content">
+    <div class="results-bar">
+      <div>
+        <h2>Holdroom Space Program</h2>
+        <div class="results-meta" id="resultsMeta">—</div>
+      </div>
+      <div><span class="fw-chip acrp" id="fwChip">ACRP</span></div>
+    </div>
+
+    <!-- KPI Row -->
+    <div class="kpi-row" id="kpiRow"></div>
+
+    <div class="grid-2">
+      <!-- LEFT: breakdown + allocation -->
+      <div>
+        <div class="card">
+          <div class="card-uptick-header">
+            <div class="card-title">Space Calculation Breakdown</div>
+            <svg width="60" height="18" viewBox="0 0 60 18">
+              <line x1="0" y1="14" x2="40" y2="14" stroke="#215eac" stroke-width="2"/>
+              <line x1="40" y1="14" x2="58" y2="4.8" stroke="#0ba89c" stroke-width="2"/>
+            </svg>
+          </div>
+          <table class="breakdown" id="breakdownTable"><tbody></tbody></table>
+          <div id="gutcheck"></div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Zone Allocation — Occupant Split</div>
+          <div class="alloc-grid" id="allocGrid"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Gate-specific spatial schematic -->
+      <div>
+        <div class="card">
+          <div class="card-uptick-header">
+            <div class="card-title">Holdroom Spatial Schematic</div>
+            <svg width="60" height="18" viewBox="0 0 60 18">
+              <line x1="0" y1="14" x2="40" y2="14" stroke="#215eac" stroke-width="2"/>
+              <line x1="40" y1="14" x2="58" y2="4.8" stroke="#febc11" stroke-width="2"/>
+            </svg>
+          </div>
+          <!-- Gate selector tabs -->
+          <div class="gate-tab-label">Select gate to view layout:</div>
+          <div class="gate-tabs" id="gateTabs"></div>
+          <div class="svg-wrap" id="svgWrap"></div>
+          <div class="svg-legend">
+            <span><i class="swatch" style="background:#d7eaf9;border-color:#215eac"></i> Seating / Waiting</span>
+            <span><i class="swatch" style="background:#c8f0ec;border-color:#0ba89c"></i> Standing / Spill</span>
+            <span><i class="swatch" style="background:#cfeeea;border-color:#0ba89c"></i> Podium Queuing</span>
+            <span><i class="swatch" style="background:#215eac"></i> Agent Podiums</span>
+            <span><i class="swatch" style="background:#fdf0d0;border-color:#febc11"></i> Corridor</span>
+            <span><i class="swatch" style="background:#103254"></i> Concourse Edge</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Exports -->
+    <div class="card">
+      <div class="card-title">Export Deliverables</div>
+      <div class="export-bar">
+        <button class="export-btn" onclick="exportXLSX()">
+          <span class="et"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#0ba89c" stroke-width="2"/><path d="M8 8l8 8M16 8l-8 8" stroke="#0ba89c" stroke-width="2"/></svg>Excel Model</span>
+          <span class="ed">.xlsx with live formulas</span>
+        </button>
+        <button class="export-btn" onclick="exportPDF()">
+          <span class="et"><svg class="ic" viewBox="0 0 24 24" fill="none"><path d="M6 3h8l4 4v14H6z" stroke="#a1225d" stroke-width="2" stroke-linejoin="round"/><path d="M14 3v4h4" stroke="#a1225d" stroke-width="2" stroke-linejoin="round"/></svg>PDF Memo</span>
+          <span class="ed">Formal planning memorandum</span>
+        </button>
+        <button class="export-btn" onclick="exportPPTX()">
+          <span class="et"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="4" width="18" height="12" rx="2" stroke="#febc11" stroke-width="2"/><path d="M9 20h6M12 16v4" stroke="#febc11" stroke-width="2"/></svg>PowerPoint</span>
+          <span class="ed">Widescreen summary slide</span>
+        </button>
+        <button class="export-btn" onclick="exportDXF()">
+          <span class="et"><svg class="ic" viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="18" height="18" rx="2" stroke="#215eac" stroke-width="2"/><path d="M7 7h4v10H7zM13 7l4 5-4 5" stroke="#215eac" stroke-width="1.5"/></svg>CAD/BIM Data</span>
+          <span class="ed">3D zone polylines (.dxf)</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Educational panel -->
+    <details class="card edu-card" open>
+      <summary>
+        <span>
+          <div class="es-title">ACRP vs. IATA — Framework Reference</div>
+          <div class="es-sub">Comparison table · LOS matrix · Space allocation benchmarks</div>
+        </span>
+        <span class="chev">▼</span>
+      </summary>
+      <div class="edu-body">
+        <p class="lead" style="font-size:13px;color:var(--rsh-dark-gray);line-height:1.6;margin-bottom:16px;">
+          Two primary frameworks govern departure holdroom sizing in North American and international practice. ACRP prescribes deterministic component-level targets; IATA establishes performance ranges based on operational variables.
+        </p>
+        <div class="edu-table-scroll">
+          <table class="edu">
+            <thead><tr><th>Feature</th><th class="acrp-h">ACRP Design Method</th><th class="iata-h">IATA Design Method</th></tr></thead>
+            <tbody>
+              <tr><td class="feat">Primary Sizing Basis</td><td>Average seating capacity of the largest aircraft expected at the gate.</td><td>Largest aircraft or a combination of aircraft for Multi-Aircraft Ramp System stands.</td></tr>
+              <tr><td class="feat">Service Level Framework</td><td>Discrete LOS A–F scale.</td><td>Over-Design, Optimum, and Sub-Optimum ranges.</td></tr>
+              <tr><td class="feat">Seated Passenger Target</td><td>15 sf/pax at LOS C; 17 sf/pax at LOS A.</td><td>1.8–2.2 m² (19.4–23.7 sf) per seated pax at Optimum.</td></tr>
+              <tr><td class="feat">Standing Passenger Target</td><td>10 sf/pax at LOS C; 12 sf/pax at LOS A.</td><td>1.2–1.5 m² (12.9–16.1 sf) per standing pax at Optimum.</td></tr>
+              <tr><td class="feat">Occupancy Timing</td><td>Passengers in the lounge 15 minutes prior to boarding.</td><td>Passenger dwell times throughout a typical busy day.</td></tr>
+              <tr><td class="feat">Capacity Factors</td><td>Fixed design load factor: 80–90% of aircraft capacity.</td><td>Variable load factors based on carrier business model and passenger segment.</td></tr>
+              <tr><td class="feat">Metric Standards</td><td>Square feet (sf).</td><td>Square meters (m²).</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </details>
+
+    <div class="footer-disc"><span id="srcNote"></span></div>
+  </main>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Planning Framework Reference</h3>
+      <button class="modal-close" onclick="closeModal()">×</button>
+    </div>
+    <div class="modal-tabs">
+      <button class="modal-tab active" onclick="setModalTab(0)">ACRP</button>
+      <button class="modal-tab" onclick="setModalTab(1)">IATA</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-pane active">
+        <h4>ACRP — Component-Driven Architectural Prescription</h4>
+        <p>Standard North American practice aligned with FAA-funded research. Sizing is deterministic based on physical aircraft capacity and fixed spatial constraints (e.g., 15 ft queue depth, 8 ft corridor) to ensure high predictability across planning scenarios.</p>
+      </div>
+      <div class="modal-pane">
+        <h4>IATA — Performance-Driven Operational Ranges</h4>
+        <p>Global ADRM framework establishing lower/upper boundaries for an "Optimum" Level of Service. Accounts for operational variables like carrier business models (LCC vs. Legacy), check-in technology, and concession-retaining "Call-to-Gate" strategies.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRINT MEMO -->
+<div class="print-memo" id="printMemo"></div>
+
+<!-- LIBRARIES loaded after inline script so CDN latency cannot block init() -->
+<script>
+/* ============================================================
+   RS&H Holdroom Dashboard V4
+   Phase 1: Airport lookup with FAA metadata
+   Phase 2: Decoupled gate schematic, three zone model, dwell factor
+   Phase 3: ADG→aircraft→seats cascade from FAA CSV
+   Phase 4: RS&H brand throughout
+   ============================================================ */
+
+const SF_PER_M2 = 10.7639104;
+const IATA = {
+  seatMin: 1.8 * SF_PER_M2, seatMax: 2.2 * SF_PER_M2,
+  standMin: 1.2 * SF_PER_M2, standMax: 1.5 * SF_PER_M2
+};
+
+let AIRPORT_REGISTRY = {}; // Loaded from ./data/airports.json
+
+let FAA_REGION_NAMES = {}; // Loaded from ./data/faa-regions.json
+let HUB_NAMES = {}; // Loaded from ./data/hub-types.json
+
+/* ---- Airline registry ---- */
+let AIRLINE_LOOKUP = {}; // Loaded from ./data/airlines.json
+
+/* ---- FAA Aircraft dataset (embedded from CSV) ---- */
+/* ============================================================
+   DATA BLOCK — FAA Aircraft Characteristics Database
+   Source: FAA Aircraft Characteristics Database (full 388-row dataset)
+   Parsed from: aircraft_data_(1).csv  |  Encoding: latin-1
+   Fields: icao, mfr, model, adg, ws (wingspan ft), seats (planning proxy)
+   To refresh: replace AIRCRAFT_DB and AIRCRAFT_RAW_DB arrays/objects below.
+   AIRCRAFT_DB     = planning array (lightweight, used for gate dropdowns)
+   AIRCRAFT_RAW_DB = full detail records (keyed by ICAO, used for modal display)
+   ============================================================ */
+
+let AIRCRAFT_DB = []; // Loaded from ./data/aircraft-planning.json
+
+let AIRCRAFT_RAW_DB = {}; // Loaded from ./data/aircraft-details.json
+
+/* Group by ADG */
+const AIRCRAFT_BY_ADG = {};
+AIRCRAFT_DB.forEach(a => {
+  if (!AIRCRAFT_BY_ADG[a.adg]) AIRCRAFT_BY_ADG[a.adg] = [];
+  AIRCRAFT_BY_ADG[a.adg].push(a);
+});
+
+/* Default aircraft per ADG for planning */
+const ADG_DEFAULTS = {
+  'I':   { model:'Cessna 208', seats: 9,   ws: 52.1 },
+  'II':  { model:'CRJ-200',    seats: 50,  ws: 68.7 },
+  'III': { model:'Boeing 737-800', seats: 162, ws: 117.4 },
+  'IV':  { model:'Boeing 757-200', seats: 176, ws: 134.8 },
+  'V':   { model:'Boeing 777-300ER', seats: 370, ws: 212.6 },
+  'VI':  { model:'Airbus A380-800', seats: 555, ws: 261.7 }
+};
+
+/* Holdroom planning attributes per ADG */
+const ADG_INFO = {
+  'I':   { label:'Commuter',              positions:1, podiumW:4,  podiumDepth:8,  queueDepth:10, bench:null },
+  'II':  { label:'Regional',              positions:1, podiumW:4,  podiumDepth:8,  queueDepth:12, bench:null },
+  'III': { label:'Narrowbody / Mainline', positions:2, podiumW:8,  podiumDepth:8,  queueDepth:15, bench:[2500,3200] },
+  'IV':  { label:'Widebody (twin-aisle)', positions:3, podiumW:10, podiumDepth:8,  queueDepth:15, bench:null },
+  'V':   { label:'Large Widebody',        positions:3, podiumW:10, podiumDepth:8,  queueDepth:15, bench:null },
+  'VI':  { label:'Jumbo / Very Large',    positions:4, podiumW:12, podiumDepth:8,  queueDepth:18, bench:null }
+};
+
+function adgInfo(adg){ return ADG_INFO[adg] || ADG_INFO['III']; }
+function podiumAreaFor(adg){ const i = adgInfo(adg); return i.positions * i.podiumW * i.podiumDepth; }
+function queueAreaFor(adg){ const i = adgInfo(adg); return i.positions * i.podiumW * i.queueDepth; }
+
+/* State */
+const state = {
+  framework: 'ACRP', acrpLOS: 'A', iataLOS: 'optimum',
+  numGates: 4, activeGateTab: 0,
+  gates: [],
+  loadFactor: 0.90, dwellFactor: 0.75, seatingRatio: 0.60,
+  corridorWidth: 8, corridorLen: 44,
+  structurePct: 0.02, amenitiesPct: 0.05, highUtilPct: 0, comboPct: 0.20
+};
+
+const GATE_DEFAULTS = [
+  {adg:'III',airline:'WN',icao:'B738'},
+  {adg:'III',airline:'AA',icao:'A320'},
+  {adg:'III',airline:'DL',icao:'B737'},
+  {adg:'II', airline:'UA',icao:'CRJ7'}
+];
+
+function blankGate(i){
+  const d = GATE_DEFAULTS[i] || {adg:'III',airline:'',icao:'B738'};
+  const def = ADG_DEFAULTS[d.adg];
+  const acMatch = AIRCRAFT_DB.find(a => a.icao === d.icao);
+  return {
+    adg: d.adg,
+    airline: d.airline,
+    icao: acMatch ? acMatch.icao : d.icao,
+    acModel: acMatch ? acMatch.model : def.model,
+    seats: acMatch ? (acMatch.seats || def.seats) : def.seats,
+    ws: acMatch ? acMatch.ws : def.ws
+  };
+}
+
+/* ---- Calculation engine ---- */
+function computeGate(g){
+  const seats = +g.seats || 0;
+  const peak = seats * state.loadFactor;
+  const target = peak * state.dwellFactor;
+  const seated = target * state.seatingRatio;
+  const standing = target * (1 - state.seatingRatio);
+
+  let seatLo, seatHi, standLo, standHi;
+  if(state.framework === 'ACRP'){
+    const losMap = {
+      'A':  {s:17,   st:12  },
+      'BC': {s:15,   st:10  },
+      'D':  {s:8.6,  st:8.6 },
+      'E':  {s:6.5,  st:6.5 }
+    };
+    const a = losMap[state.acrpLOS] || losMap['BC'];
+    seatLo = seatHi = a.s; standLo = standHi = a.st;
+  } else {
+    const iataMap = {
+      'optimum':    {sL:21.5, sH:21.5, stL:14.5, stH:14.5},
+      'overdesign': {sL:24.0, sH:24.0, stL:16.5, stH:16.5},
+      'suboptimum': {sL:19.0, sH:19.0, stL:12.5, stH:12.5}
+    };
+    const im = iataMap[state.iataLOS] || iataMap['optimum'];
+    seatLo = im.sL; seatHi = im.sH; standLo = im.stL; standHi = im.stH;
+  }
+
+  const podium = podiumAreaFor(g.adg);
+  const queue = queueAreaFor(g.adg);
+  const corridor = state.corridorWidth * state.corridorLen;
+
+  function variant(sC, stC){
+    const seatArea = seated * sC;
+    const standArea = standing * stC;
+    const base = seatArea + standArea + podium + queue + corridor;
+    const structure = base * state.structurePct;
+    const amenities = (base + structure) * state.amenitiesPct;
+    const highUtil = base * state.highUtilPct;
+    return { seatArea, standArea, podium, queue, corridor, structure, amenities, highUtil,
+      base, subtotal: base + structure + amenities + highUtil };
+  }
+
+  return {
+    peak, target, seated, standing, seatLo, seatHi, standLo, standHi,
+    lo: variant(seatLo, standLo), hi: variant(seatHi, standHi),
+    isRange: state.framework === 'IATA'
+  };
+}
+
+function compute(){
+  const gates = state.gates.slice(0, state.numGates);
+  const perGate = gates.map(g => computeGate(g));
+
+  let totalSeatsAll = 0, totalPositions = 0;
+  gates.forEach(g => { totalSeatsAll += (+g.seats||0); totalPositions += adgInfo(g.adg).positions; });
+
+  const totalLo = perGate.reduce((s,r)=>s+r.lo.subtotal,0);
+  const totalHi = perGate.reduce((s,r)=>s+r.hi.subtotal,0);
+  const discount = state.comboPct;
+  const totalNet_lo = totalLo * (1 - discount);
+  const totalNet_hi = totalHi * (1 - discount);
+
+  // Aggregate for breakdown table
+  const agg = {
+    peak: perGate.reduce((s,r)=>s+r.peak,0),
+    target: perGate.reduce((s,r)=>s+r.target,0),
+    seated: perGate.reduce((s,r)=>s+r.seated,0),
+    standing: perGate.reduce((s,r)=>s+r.standing,0),
+    seatLo: perGate[0] ? perGate[0].seatLo : 15,
+    seatHi: perGate[0] ? perGate[0].seatHi : 15,
+    standLo: perGate[0] ? perGate[0].standLo : 10,
+    standHi: perGate[0] ? perGate[0].standHi : 10,
+    lo: {
+      seating:   perGate.reduce((s,r)=>s+r.lo.seatArea,0),
+      standing:  perGate.reduce((s,r)=>s+r.lo.standArea,0),
+      podium:    perGate.reduce((s,r)=>s+r.lo.podium,0),
+      queue:     perGate.reduce((s,r)=>s+r.lo.queue,0),
+      corridor:  perGate.reduce((s,r)=>s+r.lo.corridor,0),
+      structure: perGate.reduce((s,r)=>s+r.lo.structure,0),
+      amenities: perGate.reduce((s,r)=>s+r.lo.amenities,0),
+      highUtil:  perGate.reduce((s,r)=>s+r.lo.highUtil,0),
+      subtotal: totalLo,
+      discount: totalLo * discount,
+      total: totalNet_lo
+    },
+    hi: {
+      seating:   perGate.reduce((s,r)=>s+r.hi.seatArea,0),
+      standing:  perGate.reduce((s,r)=>s+r.hi.standArea,0),
+      podium:    perGate.reduce((s,r)=>s+r.hi.podium,0),
+      queue:     perGate.reduce((s,r)=>s+r.hi.queue,0),
+      corridor:  perGate.reduce((s,r)=>s+r.hi.corridor,0),
+      structure: perGate.reduce((s,r)=>s+r.hi.structure,0),
+      amenities: perGate.reduce((s,r)=>s+r.hi.amenities,0),
+      highUtil:  perGate.reduce((s,r)=>s+r.hi.highUtil,0),
+      subtotal: totalHi,
+      discount: totalHi * discount,
+      total: totalNet_hi
+    }
+  };
+
+  return { isRange: state.framework === 'IATA', gates, perGate, agg, totalSeatsAll, totalPositions };
+}
+
+/* ---- Formatting ---- */
+const fmt = n => Math.round(n).toLocaleString('en-US');
+const pct = n => (Math.round(n*1000)/10) + '%';
+let R = null;
+
+function recompute(){
+  state.loadFactor   = clampNum('loadFactor', 0.5, 1);
+  state.dwellFactor  = clampNum('dwellFactor', 0.5, 1);
+  state.seatingRatio = clampNum('seatingRatio', 0.3, 0.95);
+  state.corridorWidth= +val('corridorWidth') || 8;
+  state.corridorLen  = +val('corridorLen') || 44;
+  state.structurePct = +val('structurePct') || 0;
+  state.amenitiesPct = +val('amenitiesPct') || 0;
+  state.highUtilPct  = +val('highUtilPct') || 0;
+  state.comboPct     = +val('comboPct') || 0;
+
+  // Auto-scale shared-gate discount: 5% per additional gate above 1, capped at 30%
+  const autoDiscount = Math.min(0.30, (state.numGates - 1) * 0.05);
+  // Only auto-set if user hasn't manually overridden
+  if (state._autoCombo) {
+    state.comboPct = autoDiscount;
+    document.getElementById('comboPct').value = autoDiscount.toFixed(2);
+  }
+  const note = document.getElementById('sharedGateNote');
+  if(note){ note.textContent = state.numGates > 1
+    ? `Auto: ${state.numGates}-gate module → ${pct(Math.min(0.30,(state.numGates-1)*0.05))} baseline discount (5%/gate)`
+    : ''; }
+
+  R = compute();
+  renderKPIs(R);
+  renderBreakdown(R);
+  renderAllocation(R);
+  renderGateTabs();
+  renderSVG(R, state.activeGateTab);
+  renderGutcheck(R);
+  renderMeta(R);
+  renderSource();
+}
+
+function renderMeta(r){
+  const el = document.getElementById('resultsMeta');
+  const losMap2 = {'A':'A','BC':'B/C','D':'D','E':'E'};
+  const iataLosNames = {'optimum':'Optimum','overdesign':'Over-Design','suboptimum':'Sub-Optimum'};
+  const losTxt = state.framework === 'ACRP' ? (' · LOS ' + (losMap2[state.acrpLOS]||state.acrpLOS)) : (' · ADRM v11 · '+(iataLosNames[state.iataLOS]||'Optimum'));
+  const ap = airportLabel ? airportLabel() : '';
+  el.textContent = (ap ? ap+' · ' : '') + state.framework + losTxt + ' · ' + state.numGates + ' gates · LF ' + pct(state.loadFactor) + ' · dwell ' + pct(state.dwellFactor);
+  document.getElementById('fwChip').textContent = state.framework;
+  document.getElementById('fwChip').className = 'fw-chip ' + (state.framework==='ACRP'?'acrp':'iata');
+}
+
+function renderKPIs(r){
+  const range = r.isRange;
+  const totalTxt = range ? (fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total)) : fmt(r.agg.lo.total);
+  const avgLo = r.agg.lo.total / state.numGates, avgHi = r.agg.hi.total / state.numGates;
+  const avgTxt = range ? (fmt(avgLo)+' – '+fmt(avgHi)) : fmt(avgLo);
+  const kpis = [
+    {cls:'',      label: range?'Total Holdroom (optimum range)':'Total Holdroom Area', value:totalTxt, sub:'sf'+(range?' · IATA min→max':' · ACRP target')},
+    {cls:'k-navy',label:'Target Holdroom Pax', value:fmt(r.agg.target), sub:'after load factor × dwell'},
+    {cls:'k-green',label:'Avg sf / Gate',       value:avgTxt,  sub:'reviewer gut-check'},
+    {cls:'k-plum', label:'Shared-Gate Discount',value:'–'+(range?(fmt(r.agg.lo.discount)+'–'+fmt(r.agg.hi.discount)):fmt(r.agg.lo.discount)), sub:'sf removed ('+pct(state.comboPct)+')'}
+  ];
+  document.getElementById('kpiRow').innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value tnum">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+    </div>`).join('');
+}
+
+function renderBreakdown(r){
+  const range = r.isRange; const a = r.agg;
+  const fp = a.hi.subtotal;
+  const vc = (lo,hi) => range ? `${fmt(lo)} – ${fmt(hi)}` : fmt(lo);
+  const info3 = adgInfo('III');
+  const rows = [
+    {zone:'seating', name:'Seating / Waiting Zone',
+     formula:`(${fmt(a.target)} target pax × ${pct(state.seatingRatio)} seated × ${range?(state.iataLOS==='overdesign'?'24.0 sf/pax':state.iataLOS==='suboptimum'?'19.0 sf/pax':'21.5 sf/pax'):({'A':'17','BC':'15','D':'8.6','E':'6.5'}[state.acrpLOS]||'15')+' sf/pax'})`,
+     lo:a.lo.seating, hi:a.hi.seating},
+    {zone:'standing', name:'Standing / Spill Zone',
+     formula:`(${fmt(a.target)} target pax × ${pct(1-state.seatingRatio)} standing × ${range?(state.iataLOS==='overdesign'?'16.5 sf/pax':state.iataLOS==='suboptimum'?'12.5 sf/pax':'14.5 sf/pax'):({'A':'12','BC':'10','D':'8.6','E':'6.5'}[state.acrpLOS]||'10')+' sf/pax'})`,
+     lo:a.lo.standing, hi:a.hi.standing},
+    {zone:'podiums', name:'Gate Agent Podiums',
+     formula:`(${r.totalPositions} total positions × 8 ft podium depth; ADG-scaled width)`,
+     lo:a.lo.podium, hi:a.hi.podium},
+    {zone:'queuing', name:'Podium Queuing Zone',
+     formula:`(${r.totalPositions} positions × ADG-scaled width × 15 ft depth)`,
+     lo:a.lo.queue, hi:a.hi.queue},
+    {zone:'corridor', name:'Secure Walkway / Circulation',
+     formula:`(${state.numGates} gates × ${state.corridorLen} ft frontage × ${state.corridorWidth} ft — 6–8 ft min clear)`,
+     lo:a.lo.corridor, hi:a.hi.corridor},
+    {zone:null, name:`Structure (${pct(state.structurePct)})`, formula:'Applied to functional base', lo:a.lo.structure, hi:a.hi.structure},
+    {zone:null, name:`Amenities (${pct(state.amenitiesPct)})`, formula:'Applied to base + structure', lo:a.lo.amenities, hi:a.hi.amenities}
+  ];
+  if(state.highUtilPct > 0) rows.push({zone:null,name:`High-Utilization (${pct(state.highUtilPct)})`,formula:'ACRP 10–30% acceptable',lo:a.lo.highUtil,hi:a.hi.highUtil});
+
+  let html = `<thead><tr><th>Component</th><th class="r">${range?'Min – Max (sf)':'Area (sf)'}</th><th class="r">% FP</th></tr></thead><tbody>`;
+  rows.forEach(row=>{
+    const pctOf = (range?row.hi:row.lo)/(range?a.hi.subtotal:a.lo.subtotal);
+    html += `<tr ${row.zone?`data-zone="${row.zone}"`:''}>
+      <td><div class="bd-name">${row.name}</div><div class="bd-formula">${row.formula}</div></td>
+      <td class="r"><span class="bd-val">${vc(row.lo,row.hi)}</span></td>
+      <td class="r"><span class="bd-pct">${pct(pctOf)}</span></td></tr>`;
+  });
+  html += `<tr class="subtotal"><td>Subtotal — programmed footprint</td>
+    <td class="r"><span class="bd-val">${vc(a.lo.subtotal,a.hi.subtotal)}</span></td><td class="r"><span class="bd-pct">100%</span></td></tr>`;
+  html += `<tr class="deduct"><td><div class="bd-name">Less: Shared Gate Space Discount</div><div class="bd-formula">Subtotal × ${pct(state.comboPct)} — staggered peak concurrency credit</div></td>
+    <td class="r"><span class="bd-val">–${vc(a.lo.discount,a.hi.discount)}</span></td><td class="r"></td></tr>`;
+  html += `<tr class="total"><td>TOTAL HOLDROOM PROGRAM</td>
+    <td class="r"><span class="bd-val">${vc(a.lo.total,a.hi.total)} sf</span></td><td class="r"></td></tr>`;
+  html += '</tbody>';
+
+  const tbl = document.getElementById('breakdownTable');
+  tbl.innerHTML = html;
+  tbl.querySelectorAll('tr[data-zone]').forEach(tr=>{
+    const z = tr.getAttribute('data-zone');
+    tr.addEventListener('mouseenter',()=>highlightZone(z));
+    tr.addEventListener('mouseleave',()=>highlightZone(null));
+  });
+}
+
+function renderAllocation(r){
+  const range = r.isRange; const a = r.agg;
+  const fp = range ? a.hi.subtotal : a.lo.subtotal;
+  const sF = range?a.hi.seating:a.lo.seating, stF = range?a.hi.standing:a.lo.standing, cF = range?a.hi.corridor:a.lo.corridor;
+  document.getElementById('allocGrid').innerHTML = `
+    <div class="alloc seat">
+      <h4>Seating / Waiting</h4>
+      <div class="occ">${pct(state.seatingRatio)} seated · 15 sf/pax</div>
+      <div class="sf tnum">${range?fmt(a.lo.seating)+'–'+fmt(a.hi.seating):fmt(a.lo.seating)} sf</div>
+      <div class="foot">${pct(sF/fp)} of total footprint</div>
+      <div class="bar"><i style="width:${Math.min(100,sF/fp*100)}%"></i></div>
+    </div>
+    <div class="alloc stand">
+      <h4>Standing / Spill Zone</h4>
+      <div class="occ">${pct(1-state.seatingRatio)} standing · 10 sf/pax</div>
+      <div class="sf tnum">${range?fmt(a.lo.standing)+'–'+fmt(a.hi.standing):fmt(a.lo.standing)} sf</div>
+      <div class="foot">${pct(stF/fp)} of total footprint</div>
+      <div class="bar"><i style="width:${Math.min(100,stF/fp*100)}%"></i></div>
+    </div>
+    <div class="alloc walk">
+      <h4>Secure Walkway</h4>
+      <div class="occ">${state.corridorWidth} ft clear width · perpendicular</div>
+      <div class="sf tnum">${fmt(a.lo.corridor)} sf</div>
+      <div class="foot">${pct(cF/fp)} of total footprint</div>
+      <div class="bar"><i style="width:${Math.min(100,cF/fp*100)}%"></i></div>
+    </div>`;
+}
+
+function renderGutcheck(r){
+  const range = r.isRange;
+  const avg = (range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates;
+  const nbGates = r.gates.filter(g=>g.adg==='III').length;
+  const el = document.getElementById('gutcheck');
+  if(nbGates===0){
+    el.className='gutcheck na';
+    el.innerHTML=`No ADG III narrowbody gates in this config — benchmark check (2,500–3,200 sf/gate) not applied. Avg: <b>${fmt(avg)} sf/gate</b>.`;
+    return;
+  }
+  if(avg>=2500&&avg<=3200){ el.className='gutcheck ok'; el.innerHTML=`Gut-check OK — avg <b>${fmt(avg)} sf/gate</b> is within ADG III narrowbody benchmark (2,500–3,200 sf).`; }
+  else if(avg<2500){ el.className='gutcheck warn'; el.innerHTML=`Below benchmark — avg <b>${fmt(avg)} sf/gate</b> is under the ADG III target floor (2,500 sf). Consider increasing seat count or LOS.`; }
+  else { el.className='gutcheck warn'; el.innerHTML=`Above benchmark — avg <b>${fmt(avg)} sf/gate</b> exceeds the ADG III ceiling (3,200 sf). Verify widebody gates are not pulling the mean.`; }
+}
+
+/* ---- Gate Tabs ---- */
+function renderGateTabs(){
+  const tabs = document.getElementById('gateTabs');
+  if(!tabs) return;
+  tabs.innerHTML = state.gates.slice(0,state.numGates).map((g,i)=>{
+    const acLabel = g.icao || 'G'+(i+1);
+    return `<button class="gate-tab${i===state.activeGateTab?' active':''}" onclick="selectGateTab(${i})">Gate ${i+1} · ${acLabel}</button>`;
+  }).join('');
+}
+
+function selectGateTab(i){
+  state.activeGateTab = i;
+  renderGateTabs();
+  renderSVG(R, i);
+}
+
+/* ---- Per-gate SVG Schematic ---- */
+function renderSVG(r, gIdx){
+  const wrap = document.getElementById('svgWrap');
+  if(!r||!r.gates.length){ wrap.innerHTML=''; return; }
+  const g = r.gates[Math.min(gIdx, r.gates.length-1)];
+  const gr = r.perGate[Math.min(gIdx, r.perGate.length-1)];
+  if(!gr){ wrap.innerHTML=''; return; }
+
+  const W = 520, H = 340, PAD = 14;
+  // proportional widths based on zone sf (approximate)
+  const lo = gr.lo;
+  const totalBase = lo.seatArea + lo.standArea + lo.podium + lo.queue + lo.corridor;
+  const totalH = H - 2*PAD;
+  const scale = totalBase > 0 ? totalH / totalBase : 1;
+
+  // Heights proportional to sf / frontage width
+  const FRONT = W - 2*PAD;
+  const seatH  = Math.max(12, lo.seatArea * scale);
+  const standH = Math.max(8, lo.standArea * scale);
+  const queueH = Math.max(10, lo.queue * scale);
+  const podH   = Math.max(8, lo.podium * scale);
+  const corrH  = Math.max(10, lo.corridor * scale);
+
+  // Stack from bottom: concourse → corridor → podiums → queuing → standing → seating
+  let y = H - PAD;
+  const zones = [];
+  function push(label, h, fill, stroke, txtColor, zoneId){
+    zones.push({label,y1:y-h,y2:y,h,fill,stroke,txtColor,zoneId});
+    y -= h;
+  }
+
+  push('Concourse Edge',    8,  '#103254','#103254','#fff','edge');
+  push('Secure Walkway',    corrH,'#fdf0d0','#febc11','#8a5d00','corridor');
+  push('Agent Podiums',     podH,'#215eac','#103254','#fff','podiums');
+  push('Podium Queuing',    queueH,'#cfeeea','#0ba89c','#0a5c56','queuing');
+  push('Standing / Spill',  standH,'#c8f0ec','#0ba89c','#0a5c56','standing');
+  push('Seating / Waiting', seatH,'#d7eaf9','#215eac','#103254','seating');
+
+  const adgI = adgInfo(g.adg);
+  const airlineName = AIRLINE_LOOKUP[g.airline] || g.airline || '—';
+
+  let svg = `<svg class="holdroom-svg" viewBox="0 0 ${W} ${H}" xmlns="http://www.w3.org/2000/svg" font-family="'Segoe UI',sans-serif">`;
+
+  // Background
+  svg += `<rect x="0" y="0" width="${W}" height="${H}" fill="#f5f7fa" rx="6"/>`;
+
+  // Title bar
+  svg += `<rect x="${PAD}" y="${PAD}" width="${W-2*PAD}" height="28" fill="#103254" rx="3"/>`;
+  svg += `<text x="${PAD+10}" y="${PAD+18}" font-size="12" font-weight="700" fill="#fff">Gate ${gIdx+1} — ${g.acModel || g.icao} · ADG ${g.adg} · ${airlineName}</text>`;
+  svg += `<text x="${W-PAD-6}" y="${PAD+18}" font-size="10" fill="#85c7ee" text-anchor="end">${g.seats} seats · WS ${g.ws} ft</text>`;
+
+  // Uptick accent on title
+  svg += `<line x1="${W-PAD-70}" y1="${PAD+26}" x2="${W-PAD-20}" y2="${PAD+26}" stroke="#215eac" stroke-width="1.5"/>`;
+  svg += `<line x1="${W-PAD-20}" y1="${PAD+26}" x2="${W-PAD-6}" y2="${PAD+20.5}" stroke="#0ba89c" stroke-width="1.5"/>`;
+
+  const drawY = PAD + 42;
+  const drawH = H - drawY - PAD;
+  const drawW = W - 2*PAD;
+
+  // Zones
+  let zy = drawY + drawH;
+  const zoneRects = [];
+  function addZone(id, label, sf, fill, stroke, textCol, h){
+    const realH = Math.max(14, (sf / Math.max(totalBase,1)) * drawH);
+    zoneRects.push({id,label,sf,fill,stroke,textCol,y:zy-realH,h:realH});
+    zy -= realH;
+  }
+
+  const l = gr.lo;
+  addZone('edge','Concourse Edge', l.podium*0.1,'#103254','#103254','#fff', 10);
+  addZone('corridor','Secure Walkway / Circulation', l.corridor,'#fdf0d0','#febc11','#8a5d00', corrH);
+  addZone('podiums','Agent Podiums', l.podium,'#215eac','#103254','#fff', podH);
+  addZone('queuing','Podium Queuing Zone', l.queue,'#cfeeea','#0ba89c','#0a5c56', queueH);
+  addZone('standing','Standing / Spill Zone', l.standArea,'#c8f0ec','#0ba89c','#0a5c56', standH);
+  addZone('seating','Seating / Waiting', l.seatArea,'#d7eaf9','#215eac','#103254', seatH);
+
+  // Draw zones with real proportions
+  let curY = drawY + drawH;
+  const sfTotal = l.corridor + l.podium + l.queue + l.standArea + l.seatArea + l.podium*0.1;
+  [
+    {id:'edge',label:'Concourse Edge',sf:l.podium*0.1,fill:'#103254',stroke:'#103254',tc:'#fff'},
+    {id:'corridor',label:'Secure Walkway / Circulation',sf:l.corridor,fill:'#fdf0d0',stroke:'#febc11',tc:'#8a5d00'},
+    {id:'podiums',label:`Agent Podiums (${adgI.positions} pos · ${adgI.podiumW} ft × ${adgI.podiumDepth} ft)`,sf:l.podium,fill:'#215eac',stroke:'#103254',tc:'#fff'},
+    {id:'queuing',label:'Podium Queuing Zone',sf:l.queue,fill:'#cfeeea',stroke:'#0ba89c',tc:'#0a5c56'},
+    {id:'standing',label:'Standing / Spill Zone (40% of pax)',sf:l.standArea,fill:'#c8f0ec',stroke:'#0ba89c',tc:'#0a5c56'},
+    {id:'seating',label:'Seating / Waiting (60% of pax, 15 sf)',sf:l.seatArea,fill:'#d7eaf9',stroke:'#215eac',tc:'#103254'},
+  ].forEach(zone=>{
+    const h = Math.max(16, (zone.sf/Math.max(sfTotal,1))*drawH);
+    const ry = curY - h;
+    svg += `<g class="svg-zone" id="z-${zone.id}">`;
+    svg += `<rect class="zfill" x="${PAD}" y="${ry}" width="${drawW}" height="${h}" fill="${zone.fill}" stroke="${zone.stroke}" stroke-width="1"/>`;
+    // Label text
+    const textY = ry + h/2 + 4;
+    if(h >= 16){
+      svg += `<text x="${PAD+8}" y="${textY}" font-size="11" font-weight="600" fill="${zone.tc}">${zone.label}</text>`;
+      if(zone.sf > 0){
+        svg += `<text x="${W-PAD-6}" y="${textY}" font-size="11" font-weight="700" fill="${zone.tc}" text-anchor="end">${fmt(zone.sf)} sf</text>`;
+      }
+    }
+    svg += '</g>';
+    curY -= h;
+  });
+
+  // Podium icons
+  const podY = (() => {
+    let y2 = drawY+drawH;
+    [{sf:l.podium*0.1},{sf:l.corridor},{sf:l.podium}].forEach(z=>{
+      const h2 = Math.max(16,(z.sf/Math.max(sfTotal,1))*drawH);
+      y2 -= h2;
+    });
+    return y2;
+  })();
+  const podH2 = Math.max(16,(l.podium/Math.max(sfTotal,1))*drawH);
+  const iconY = podY + podH2/2 - 5;
+  for(let p=0;p<Math.min(adgI.positions,4);p++){
+    const ix = PAD + (drawW/(adgI.positions+1))*(p+1);
+    svg += `<rect x="${ix-8}" y="${iconY}" width="16" height="10" rx="2" fill="#fff" opacity="0.8"/>`;
+  }
+
+  // 28° uptick accent mark at bottom right
+  svg += `<line x1="${W-PAD-50}" y1="${H-PAD-2}" x2="${W-PAD-18}" y2="${H-PAD-2}" stroke="#215eac" stroke-width="2"/>`;
+  svg += `<line x1="${W-PAD-18}" y1="${H-PAD-2}" x2="${W-PAD-4}" y2="${H-PAD-9.5}" stroke="#0ba89c" stroke-width="2"/>`;
+
+  svg += '</svg>';
+  wrap.innerHTML = svg;
+
+  // Wire up hover cross-link
+  document.querySelectorAll('.svg-zone').forEach(el=>{
+    el.addEventListener('mouseenter',()=>highlightZone(el.id.replace('z-','')));
+    el.addEventListener('mouseleave',()=>highlightZone(null));
+  });
+}
+
+function highlightZone(zone){
+  const idMap = {seating:'z-seating',standing:'z-standing',podiums:'z-podiums',queuing:'z-queuing',corridor:'z-corridor'};
+  document.querySelectorAll('.svg-zone').forEach(el=>{
+    el.classList.remove('dim','glow');
+    if(zone) el.classList.add(el.id===('z-'+(idMap[zone]?.replace('z-','')||zone))?'glow':'dim');
+  });
+  document.querySelectorAll('tr[data-zone]').forEach(tr=>{
+    tr.classList.toggle('row-active', tr.getAttribute('data-zone')===zone);
+  });
+}
+
+/* ---- Gate modules in sidebar ---- */
+function renderGates(){
+  const c = document.getElementById('gateContainer');
+  c.innerHTML = '';
+  for(let i=0;i<state.numGates;i++){
+    if(!state.gates[i]) state.gates[i] = blankGate(i);
+    const g = state.gates[i];
+    const info = adgInfo(g.adg);
+    const mod = document.createElement('div');
+    mod.className = 'gate-module';
+    mod.innerHTML = `
+      <div class="gate-module-header" onclick="toggleGateModule(${i})">
+        <span class="gate-tag">GATE ${i+1}</span>
+        <span class="gm-title">ADG ${g.adg} — ${adgInfo(g.adg).label}</span>
+      </div>
+      <div class="gate-module-body" id="gmbody-${i}">
+        <div class="field" style="margin-bottom:8px">
+          <div class="mini-label">Airplane Design Group</div>
+          <select onchange="onADGChange(${i},this.value)">${adgOptions(g.adg)}</select>
+        </div>
+        <div class="field" style="margin-bottom:6px">
+          <div class="mini-label" style="display:flex;align-items:center;gap:6px;">Aircraft Model (from FAA database)<button type="button" class="info-icon-btn" onclick="openAircraftModal(${i})" title="View raw FAA database record">&#9432;</button></div>
+          <select id="gAcSel-${i}" onchange="onAircraftSelect(${i},this.value)">${aircraftOptions(g.adg, g.icao)}</select>
+        </div>
+        <div class="field" style="margin-bottom:6px">
+          <div class="mini-label">Airline (tenant)</div>
+          <select onchange="onGateAirline(${i},this.value)">${airlineOptions(g.airline)}</select>
+        </div>
+        <div class="field" style="margin-bottom:4px">
+          <div class="mini-label">Aircraft seats <span style="font-size:10px;color:var(--muted);font-weight:400">(planning capacity)</span></div>
+          <input type="number" min="0" max="900" value="${g.seats}" onchange="onGateSeats(${i},this.value)">
+        </div>
+        <div class="podium-info">
+          <span>ADG ${g.adg} → <strong>${info.positions}</strong> podium${info.positions>1?'s':''} · <strong>${info.podiumW}×${info.podiumDepth} ft</strong> · queue <strong>${info.queueDepth} ft</strong></span>
+        </div>
+        <div class="adg-hint" id="adghint-${i}"></div>
+      </div>`;
+    c.appendChild(mod);
+    updateADGHint(i);
+  }
+}
+
+function toggleGateModule(i){
+  const b = document.getElementById('gmbody-'+i);
+  if(b) b.style.display = b.style.display==='none' ? '' : 'none';
+}
+
+function adgOptions(sel){
+  return ['I','II','III','IV','V','VI'].map(a=>`<option value="${a}"${a===sel?' selected':''}>ADG ${a} — ${adgInfo(a).label}</option>`).join('');
+}
+
+function aircraftOptions(adg, selIcao){
+  const list = AIRCRAFT_BY_ADG[adg] || [];
+  const base = `<option value="" ${!selIcao?'selected':''}>(Select specific model…)</option>`;
+  return base + list.map(a=>`<option value="${a.icao}"${a.icao===selIcao?' selected':''}>${a.model} [${a.icao}] — ws ${a.ws} ft${a.seats?' · '+a.seats+' seats':''}</option>`).join('');
+}
+
+function airlineOptions(sel){
+  const base = `<option value=""${!sel?' selected':''}> — Select airline —</option>`;
+  return base + Object.keys(AIRLINE_LOOKUP).map(c=>`<option value="${c}"${c===sel?' selected':''}>${AIRLINE_LOOKUP[c]} [${c}]</option>`).join('');
+}
+
+function updateADGHint(i){
+  const g = state.gates[i]; const info = adgInfo(g.adg);
+  const el = document.getElementById('adghint-'+i);
+  if(!el) return;
+  const bench = info.bench ? ` · bench ${info.bench[0].toLocaleString()}–${info.bench[1].toLocaleString()} sf` : '';
+  el.innerHTML = `<span class="adg-badge">ADG ${g.adg}</span><span>${info.label}${bench}</span>`;
+}
+
+function onADGChange(i, adg){
+  state.gates[i].adg = adg;
+  const def = ADG_DEFAULTS[adg];
+  // Reset to default model for new ADG
+  const firstAC = (AIRCRAFT_BY_ADG[adg]||[])[0];
+  if(firstAC){
+    state.gates[i].icao = firstAC.icao;
+    state.gates[i].acModel = firstAC.model;
+    state.gates[i].seats = firstAC.seats || def.seats;
+    state.gates[i].ws = firstAC.ws;
+  } else {
+    state.gates[i].icao = '';
+    state.gates[i].acModel = def.model;
+    state.gates[i].seats = def.seats;
+    state.gates[i].ws = def.ws;
+  }
+  renderGates();
+  renderGateTabs();
+  recompute();
+}
+
+function onAircraftSelect(i, icao){
+  if(!icao){ recompute(); return; }
+  const ac = AIRCRAFT_DB.find(a=>a.icao===icao);
+  if(ac){
+    state.gates[i].icao = ac.icao;
+    state.gates[i].acModel = ac.model;
+    state.gates[i].ws = ac.ws;
+    if(ac.seats) state.gates[i].seats = ac.seats;
+    // Refresh the gate module body without full re-render
+    const seatEl = document.querySelector(`#gmbody-${i} input[type="number"]`);
+    if(seatEl) seatEl.value = state.gates[i].seats;
+    const wsEl = document.querySelectorAll(`#gmbody-${i} input[type="number"]`)[1];
+    if(wsEl) wsEl.value = state.gates[i].ws;
+    updateADGHint(i);
+    renderGateTabs();
+    recompute();
+  }
+}
+
+function onGateAirline(i, v){ state.gates[i].airline = v; recompute(); }
+function onGateSeats(i, v){ state.gates[i].seats = +v||0; recompute(); }
+function onGateWS(i, v){ state.gates[i].ws = +v||0; recompute(); }
+
+function onNumGates(v){
+  v = Math.max(1, Math.min(12, parseInt(v)||1));
+  state.numGates = v;
+  document.getElementById('numGates').value = v;
+  document.getElementById('numGatesVal').value = v;
+  if(state.activeGateTab >= v) state.activeGateTab = v-1;
+  // Auto-scale shared-gate discount
+  state._autoCombo = true;
+  state.comboPct = Math.min(0.30,(v-1)*0.05);
+  document.getElementById('comboPct').value = state.comboPct.toFixed(2);
+  renderGates();
+  recompute();
+}
+
+/* ---- Framework / hints ---- */
+function setFramework(fw){
+  state.framework = fw;
+  ['fwBtnACRP','fwBtnACRP2'].forEach(id=>document.getElementById(id).classList.toggle('active',fw==='ACRP'));
+  ['fwBtnIATA','fwBtnIATA2'].forEach(id=>document.getElementById(id).classList.toggle('active',fw==='IATA'));
+  document.getElementById('acrpLOSField').style.display = fw==='ACRP'?'block':'none';
+  document.getElementById('iataLOSField').style.display = fw==='IATA'?'block':'none';
+  document.getElementById('fwHint').textContent = fw==='ACRP'?'North American · component-driven':'Global ADRM · performance ranges';
+  if(fw==='ACRP') onLOSChange(true);
+  if(fw==='IATA'){
+    if(state.seatingRatio>0.70) setSeatingRatio(0.60);
+    else if(state.seatingRatio<0.50) setSeatingRatio(0.60);
+    state.iataLOS = document.getElementById('iataLOS').value || 'optimum';
+  }
+  recompute();
+}
+
+function onLOSChange(skipRatio){
+  state.acrpLOS = document.getElementById('acrpLOS').value;
+  if(!skipRatio){
+    const ratioMap = {'A':0.60,'BC':0.50,'D':0.40,'E':0.35};
+    setSeatingRatio(ratioMap[state.acrpLOS] || 0.50);
+  }
+  recompute();
+}
+
+function onIATALOSChange(){
+  state.iataLOS = document.getElementById('iataLOS').value;
+  recompute();
+}
+
+function setSeatingRatio(v){
+  state.seatingRatio = v;
+  document.getElementById('seatingRatio').value = v;
+  document.getElementById('seatingRatioVal').value = v;
+}
+
+function val(id){ return document.getElementById(id).value; }
+function clampNum(id,lo,hi){ let v=+val(id); if(isNaN(v)) v=lo; return Math.max(lo,Math.min(hi,v)); }
+function syncSlider(id){ document.getElementById(id+'Val').value=document.getElementById(id).value; }
+function syncNum(id){ document.getElementById(id).value=document.getElementById(id+'Val').value; }
+
+/* ---- Airport lookup ---- */
+let AIRPORT = null;
+function onAirportInput(inp){
+  inp.value = inp.value.toUpperCase();
+  const code = inp.value.trim();
+  const rec = AIRPORT_REGISTRY[code];
+  const el = document.getElementById('abDetails');
+  if(rec){
+    AIRPORT = {code, ...rec};
+    const regionName = FAA_REGION_NAMES[rec.region] || rec.region;
+    const hubName = HUB_NAMES[rec.hub] || rec.hub;
+    el.innerHTML = `<div class="ab-name">${rec.name}</div>
+      <div class="ab-meta-chips">
+        <span class="ab-chip">${rec.city}, ${rec.state}</span>
+        <span class="ab-chip">FAA ${rec.region} · ${regionName}</span>
+        <span class="ab-chip hub">${hubName}</span>
+        <a class="ab-chip wiki" href="https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(rec.name)}" target="_blank" rel="noopener" title="Open Wikipedia article for ${rec.name}">↗ Wikipedia</a>
+      </div>`;
+  } else {
+    AIRPORT = code.length===3 ? {code,name:'',city:'',state:'',region:'',hub:''} : null;
+    el.innerHTML = '';
+  }
+  renderMeta(R);
+}
+function airportLabel(){
+  if(!AIRPORT) return '';
+  return AIRPORT.name ? `${AIRPORT.code} · ${AIRPORT.name}` : AIRPORT.code;
+}
+
+/* ---- Modal ---- */
+function openModal(){ document.getElementById('overlay').classList.add('open'); }
+function closeModal(){ document.getElementById('overlay').classList.remove('open'); }
+function setModalTab(i){
+  document.querySelectorAll('.modal-tab').forEach((t,idx)=>t.classList.toggle('active',idx===i));
+  document.querySelectorAll('.modal-pane').forEach((p,idx)=>p.classList.toggle('active',idx===i));
+}
+document.addEventListener('keydown',e=>{ if(e.key==='Escape'){ closeModal(); if(typeof closeTip==='function') closeTip(); if(typeof closeAircraftModal==='function') closeAircraftModal(); } });
+
+function renderSource(){
+  document.getElementById('srcNote').innerHTML =
+    `<strong>Methodology &amp; sources.</strong> ACRP — <em>Passenger Level of Service and Spatial Planning for Airports</em>; IATA <em>Airport Development Reference Manual (ADRM) v11</em>; FAA Aircraft Characteristics Database; RS&amp;H planning analysis. Conversions at ${SF_PER_M2.toFixed(4)} sf/m². Wingspan values sourced from FAA engineering dataset. Seat counts are typical-configuration planning proxies.
+    <br><br><strong>For internal study use only.</strong> Outputs are planning-level order-of-magnitude estimates for early programming and require validation by a licensed professional against project-specific codes, the governing master plan, and tenant requirements before any design or contractual use. RS&amp;H Innovation Studio · NXT_GEN.`;
+}
+
+/* ---- Exports (preserved + updated) ---- */
+function scenarioMeta(){
+  const iataLosShort = {'optimum':'ADRM Optimum','overdesign':'ADRM Over-Design','suboptimum':'ADRM Sub-Optimum'};
+  const acrpLosShort = {'A':'LOS A','BC':'LOS B/C','D':'LOS D','E':'LOS E'};
+  const losTxt = state.framework==='ACRP' ? (acrpLosShort[state.acrpLOS]||'LOS B/C') : (iataLosShort[state.iataLOS]||'ADRM v11');
+  return {date:new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}), fw:state.framework, los:losTxt, airport:airportLabel()};
+}
+
+function zoneMatrix(r){
+  const range = r.isRange; const a = r.agg;
+  const v = (lo,hi)=> range ? {min:Math.round(lo),max:Math.round(hi)} : {min:Math.round(lo),max:Math.round(lo)};
+  return [
+    ['Seating / Waiting Zone', v(a.lo.seating,a.hi.seating)],
+    ['Standing / Spill Zone', v(a.lo.standing,a.hi.standing)],
+    ['Gate Agent Podiums', v(a.lo.podium,a.hi.podium)],
+    ['Podium Queuing Zone', v(a.lo.queue,a.hi.queue)],
+    ['Secure Walkway / Circulation', v(a.lo.corridor,a.hi.corridor)],
+    ['Structure', v(a.lo.structure,a.hi.structure)],
+    ['Amenities', v(a.lo.amenities,a.hi.amenities)],
+    ['High-Utilization', v(a.lo.highUtil,a.hi.highUtil)],
+    ['Subtotal', v(a.lo.subtotal,a.hi.subtotal)],
+    ['Less: Shared Gate Discount', v(-a.lo.discount,-a.hi.discount)],
+    ['TOTAL HOLDROOM PROGRAM', v(a.lo.total,a.hi.total)]
+  ];
+}
+
+function exportXLSX(){
+  if(typeof XLSX==='undefined'){alert('Excel library failed to load (needs internet for CDN).');return;}
+  const r=R, range=r.isRange, m=scenarioMeta();
+  const ws={};
+  const S=(v)=>({t:'s',v:String(v)}), N=(v)=>({t:'n',v:Number(v)}), F=(f,v)=>({t:'n',f,v:Number(v)});
+  const set=(addr,cell)=>{ws[addr]=cell;};
+  set('A1',S('RS&H Aviation Planning & Innovation — Holdroom Program V4'));
+  set('A2',S(`${m.airport?m.airport+' · ':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los} · ${state.numGates} gates · generated ${m.date}`));
+  set('A4',S('INPUTS'));
+  const inputs=[
+    ['Active gates',state.numGates],['Total aircraft seats',r.totalSeatsAll],
+    ['Load factor',state.loadFactor],['Dwell attendance factor',state.dwellFactor],
+    ['Seating ratio',state.seatingRatio],['Seated area/pax min (sf)',r.agg.seatLo],['Seated area/pax max (sf)',r.agg.seatHi],
+    ['Standing area/pax min (sf)',r.agg.standLo],['Standing area/pax max (sf)',r.agg.standHi],
+    ['Total podium positions',r.totalPositions],['Corridor width (ft)',state.corridorWidth],
+    ['Frontage/gate (ft)',state.corridorLen],['Structure factor',state.structurePct],
+    ['Amenities factor',state.amenitiesPct],['High-utilization factor',state.highUtilPct],
+    ['Shared-gate discount',state.comboPct]
+  ];
+  let row=5;
+  inputs.forEach(([label,value])=>{set('A'+row,S(label));set('B'+row,N(value));row++;});
+  row++;
+  set('A'+row,S('ZONE BREAKDOWN (sf)')); if(range){set('B'+row,S('Optimum Min'));set('C'+row,S('Optimum Max'));}else{set('B'+row,S('Area (sf)'));} row++;
+  zoneMatrix(r).forEach(([name,z])=>{
+    set('A'+row,S(name)); set('B'+row,N(z.min)); if(range) set('C'+row,N(z.max)); row++;
+  });
+  row++;
+  set('A'+row,S('GATE CONFIGURATION')); row++;
+  set('A'+row,S('Gate'));set('B'+row,S('Airline'));set('C'+row,S('Aircraft'));set('D'+row,S('Seats'));set('E'+row,S('ADG'));set('F'+row,S('Podiums'));set('G'+row,S('Wingspan (ft)')); row++;
+  r.gates.forEach((g,i)=>{
+    const info=adgInfo(g.adg);
+    set('A'+row,S('Gate '+(i+1)));set('B'+row,S(AIRLINE_LOOKUP[g.airline]||g.airline||''));
+    set('C'+row,S(g.acModel||g.icao||''));set('D'+row,N(+g.seats||0));
+    set('E'+row,S('ADG '+g.adg));set('F'+row,N(info.positions));set('G'+row,N(g.ws||0)); row++;
+  });
+  const ref={r:1,c:0}; ws['!ref']='A1:G'+row;
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Holdroom Program');
+  XLSX.writeFile(wb,`RSH_Holdroom_V4_${state.framework}.xlsx`);
+}
+
+function buildPrintMemo(){
+  const r=R; if(!r) return;
+  const range=r.isRange, m=scenarioMeta();
+  const gateRows=r.gates.map((g,i)=>{
+    const cl=adgInfo(g.adg);
+    return `<tr><td>Gate ${i+1}</td><td>${AIRLINE_LOOKUP[g.airline]||g.airline||'—'}</td><td>${g.acModel||g.icao||'—'}</td><td class="r">${+g.seats||0}</td><td>ADG ${cl.label}</td><td class="r">${cl.positions}</td></tr>`;
+  }).join('');
+  document.getElementById('printMemo').innerHTML=`
+    <div class="pm-title">RS&H Holdroom Space Program</div>
+    <div class="pm-meta">${m.airport?m.airport+' · ':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los} · Generated ${m.date}</div>
+    <div class="pm-section-title">Program Summary</div>
+    <table class="pm-table">
+      <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
+      <tbody>
+        <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
+        <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
+        <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
+        <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
+        <tr><td>Seating Ratio</td><td class="r">${pct(state.seatingRatio)}</td></tr>
+        <tr><td>Corridor Width</td><td class="r">${state.corridorWidth} ft</td></tr>
+        <tr><td>Shared-Gate Discount</td><td class="r">${pct(state.comboPct)}</td></tr>
+        <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
+      </tbody>
+    </table>
+    <div class="pm-section-title">Gate Configuration</div>
+    <table class="pm-table">
+      <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
+      <tbody>${gateRows}</tbody>
+    </table>
+    <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis. Planning-level estimates for internal study; validate with a licensed professional before design or contractual use.</div>`;
+}
+function exportPDF(){ buildPrintMemo(); window.print(); }
+
+/* PPTX loader */
+function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.onload=()=>res(true); s.onerror=()=>rej(new Error('load failed: '+src)); document.head.appendChild(s); }); }
+async function ensurePptx(){
+  if(typeof PptxGenJS!=='undefined') return true;
+  const cdns=['https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js','https://unpkg.com/pptxgenjs@3.12.0/dist/pptxgen.bundle.js'];
+  for(const url of cdns){ try{ await loadScript(url); if(typeof PptxGenJS!=='undefined') return true; }catch(e){} }
+  return typeof PptxGenJS!=='undefined';
+}
+
+async function exportPPTX(){
+  const ready=await ensurePptx();
+  if(!ready){alert('PowerPoint export needs an internet connection. Please connect and try again.');return;}
+  const r=R, range=r.isRange, m=scenarioMeta();
+  const pptx=new PptxGenJS();
+  pptx.defineLayout({name:'WIDE',width:13.33,height:7.5});
+  pptx.layout='WIDE';
+  const BLUE='215eac',NAVY='103254',GREEN='0ba89c',GOLD='febc11',GRAY='415465',LIGHT='eef3f9';
+  const s=pptx.addSlide();
+  s.background={color:'FFFFFF'};
+  s.addShape(pptx.ShapeType.rect,{x:0,y:0,w:13.33,h:0.10,fill:{type:'gradient',stops:[{color:BLUE,position:0},{color:GREEN,position:50},{color:GOLD,position:85},{color:'fce9c4',position:100}],angle:45}});
+  s.addText('RS&H Aviation Planning & Innovation',{x:0.5,y:0.28,w:9,h:0.45,fontFace:'Segoe UI',fontSize:22,bold:true,color:NAVY});
+  s.addText('Holdroom Capacity — Space Program Summary (V4)',{x:0.5,y:0.74,w:9,h:0.3,fontFace:'Segoe UI',fontSize:13,color:GRAY});
+  s.addText(`${m.airport?m.airport+'\n':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los}\n${m.date}`,{x:9.4,y:0.30,w:3.5,h:0.85,fontFace:'Segoe UI',fontSize:10.5,color:GRAY,align:'right'});
+  s.addText('GATE CONFIGURATION',{x:0.5,y:1.3,w:4,h:0.3,fontFace:'Segoe UI',fontSize:11,bold:true,color:BLUE});
+  const gT=[[{text:'Stand',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9}},{text:'Air',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9}},{text:'Aircraft',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9}},{text:'Seats',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9,align:'right'}},{text:'Pod',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9,align:'right'}}]];
+  r.gates.forEach((g,i)=>{const cl=adgInfo(g.adg); gT.push([{text:'G'+(i+1),options:{fontSize:9}},{text:g.airline||'—',options:{fontSize:9}},{text:(g.acModel||g.icao||'—').substring(0,18),options:{fontSize:9}},{text:String(+g.seats||0),options:{fontSize:9,align:'right'}},{text:String(cl.positions),options:{fontSize:9,align:'right'}}]);});
+  s.addTable(gT,{x:0.5,y:1.62,w:4,colW:[0.7,0.6,1.6,0.65,0.45],border:{type:'solid',color:'d9dfe8',pt:0.5},fontFace:'Segoe UI'});
+  const ay=1.72+0.26*(r.gates.length+1)+0.2;
+  s.addText(`Load factor: ${pct(state.loadFactor)}\nDwell factor: ${pct(state.dwellFactor)}\nSeating ratio: ${pct(state.seatingRatio)}\nCorridor: ${state.corridorWidth} ft\nShared-gate discount: ${pct(state.comboPct)}`,{x:0.5,y:ay,w:4,h:1.6,fontFace:'Segoe UI',fontSize:11,color:GRAY,lineSpacingMultiple:1.25});
+  s.addShape(pptx.ShapeType.rect,{x:4.85,y:1.55,w:3.6,h:3.6,fill:{color:LIGHT},line:{color:BLUE,width:1}});
+  s.addText('TOTAL HOLDROOM PROGRAM',{x:4.85,y:1.75,w:3.6,h:0.3,align:'center',fontFace:'Segoe UI',fontSize:11,bold:true,color:BLUE});
+  const totTxt=range?`${fmt(r.agg.lo.total)}–${fmt(r.agg.hi.total)}`:`${fmt(r.agg.lo.total)}`;
+  s.addText(totTxt,{x:4.85,y:2.2,w:3.6,h:1.0,align:'center',fontFace:'Segoe UI',fontSize:38,bold:true,color:NAVY});
+  s.addText('square feet',{x:4.85,y:3.15,w:3.6,h:0.3,align:'center',fontFace:'Segoe UI',fontSize:13,color:GRAY});
+  const avg=((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total))/state.numGates;
+  s.addText([{text:`${fmt(r.agg.target)}`,options:{bold:true,color:BLUE,fontSize:18}},{text:'  target pax\n',options:{color:GRAY,fontSize:11}},{text:`${fmt(avg)}`,options:{bold:true,color:GREEN,fontSize:18}},{text:'  avg sf / gate',options:{color:GRAY,fontSize:11}}],{x:4.85,y:3.7,w:3.6,h:1.2,align:'center',lineSpacingMultiple:1.4});
+  s.addText('COMPONENT LAYOUT',{x:8.8,y:1.3,w:4,h:0.3,fontFace:'Segoe UI',fontSize:11,bold:true,color:BLUE});
+  const zrows=zoneMatrix(r).filter(([n])=>!n.startsWith('Subtotal'));
+  const cT=[[{text:'Functional Zone',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9}},{text:range?'Min–Max sf':'sf',options:{bold:true,color:'FFFFFF',fill:NAVY,fontSize:9,align:'right'}}]];
+  zrows.forEach(([name,z])=>{const isT=name.startsWith('TOTAL');const v=range?`${z.min.toLocaleString()}–${z.max.toLocaleString()}`:`${z.min.toLocaleString()}`;cT.push([{text:name,options:{fontSize:9,bold:isT,color:isT?NAVY:GRAY}},{text:v,options:{fontSize:9,align:'right',bold:isT,color:isT?NAVY:GRAY}}]);});
+  s.addTable(cT,{x:8.8,y:1.62,w:4.05,colW:[2.85,1.2],border:{type:'solid',color:'d9dfe8',pt:0.5},fontFace:'Segoe UI'});
+  s.addText('Sources: ACRP Passenger LOS & Spatial Planning · IATA ADRM v11 · FAA Aircraft Characteristics Database · RS&H analysis. Planning-level estimates for internal study only.',{x:0.5,y:6.95,w:12.3,h:0.4,fontFace:'Segoe UI',fontSize:8,italic:true,color:'8a93a3'});
+  pptx.writeFile({fileName:`RSH_Holdroom_V4_${state.framework}.pptx`});
+}
+
+function exportCSV(){
+  const r=R, range=r.isRange, m=scenarioMeta();
+  let csv='RS&H Holdroom Program V4 — CAD/BIM Spatial Data\r\n';
+  csv+=`Airport,${m.airport||''}\r\n`;
+  csv+=`Framework,${range?'IATA ADRM v11':'ACRP'},LOS,${m.los},Gates,${state.numGates},Generated,${m.date}\r\n\r\n`;
+  csv+=range?'Functional Zone,Target SF (min),Target SF (max)\r\n':'Functional Zone,Target SF\r\n';
+  zoneMatrix(r).forEach(([name,z])=>{ csv+=range?`"${name}",${z.min},${z.max}\r\n`:`"${name}",${z.min}\r\n`; });
+  csv+='\r\nGate,Airline,Aircraft,ICAO,Seats,ADG,Podiums,Wingspan (ft)\r\n';
+  r.gates.forEach((g,i)=>{ const cl=adgInfo(g.adg); csv+=`Gate ${i+1},${AIRLINE_LOOKUP[g.airline]||g.airline||''},${g.acModel||''},${g.icao||''},${+g.seats||0},ADG ${g.adg},${cl.positions},${g.ws||''}\r\n`; });
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url; a.download=`RSH_Holdroom_V4_Zones_${state.framework}.csv`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+/* ============================================================
+   AIRCRAFT RAW DATA MODAL (Change 6)
+   ============================================================ */
+function openAircraftModal(gateIdx){
+  const g = state.gates[Math.min(gateIdx, state.gates.length-1)];
+  if(!g || !g.icao){ return; }
+  const rec = AIRCRAFT_RAW_DB[g.icao];
+  const h = document.getElementById('acModalBody');
+  if(!rec){
+    h.innerHTML = `<p style="color:var(--muted);font-size:13px;">No raw FAA database record found for ICAO code <strong>${g.icao}</strong>. This aircraft may not be in the embedded dataset.</p>`;
+    document.getElementById('acModalHeader').textContent = `FAA Database — ${g.icao}`;
+    document.getElementById('acModalOverlay').classList.add('open');
+    return;
+  }
+  const fld = (label, val, hl) => `<div class="ac-field${hl?' highlight':''}"><div class="ac-field-label">${label}</div><div class="ac-field-value">${val||'—'}</div></div>`;
+  document.getElementById('acModalHeader').textContent = `FAA Aircraft Database — ${rec.icao}`;
+  h.innerHTML = `
+    <div class="ac-modal-title-bar">
+      <div>
+        <div class="ac-big-model">${rec.model}</div>
+        <div class="ac-big-sub">${rec.mfr} · ICAO: <strong>${rec.icao}</strong> · ADG ${rec.adg} · TDG ${rec.tdg}</div>
+      </div>
+    </div>
+    <div class="ac-field-grid">
+      ${fld('ICAO Code', rec.icao, true)}
+      ${fld('Manufacturer', rec.mfr, true)}
+      ${fld('ADG Category', 'ADG ' + rec.adg, true)}
+      ${fld('TDG Category', 'TDG ' + rec.tdg, true)}
+      ${fld('Engine Type', rec.eng_type)}
+      ${fld('# Engines', rec.num_eng)}
+      ${fld('Wingspan (no winglets)', rec.ws_no_wl ? rec.ws_no_wl + ' ft' : '—')}
+      ${fld('Wingspan (w/ winglets)', rec.ws_wl ? rec.ws_wl + ' ft' : '—', true)}
+      ${fld('Length', rec.length ? rec.length + ' ft' : '—')}
+      ${fld('Tail Height', rec.tail_h ? rec.tail_h + ' ft' : '—')}
+      ${fld('Wheelbase', rec.wheelbase ? rec.wheelbase + ' ft' : '—')}
+      ${fld('Main Gear Config', rec.main_gear)}
+      ${fld('MTOW', rec.mtow ? rec.mtow + ' lb' : '—')}
+      ${fld('MALW', rec.malw ? rec.malw + ' lb' : '—')}
+      ${fld('ICAO WTC', rec.wtc)}
+      ${fld('Parking Area', rec.parking ? rec.parking + ' ft²' : '—')}
+      ${fld('Approach Speed', rec.approach_spd ? rec.approach_spd + ' kts' : '—')}
+      ${fld('FY24 Operations', rec.ops_fy24 || '—')}
+    </div>
+    <p class="ac-source-note">Source: FAA Aircraft Characteristics Database (embedded dataset). Wingspan values shown are as-published; actual gate-planning wingspan should reference current FAA ACD.</p>`;
+  document.getElementById('acModalOverlay').classList.add('open');
+}
+function closeAircraftModal(){
+  document.getElementById('acModalOverlay').classList.remove('open');
+}
+
+/* ============================================================
+   TOOLTIP SYSTEM (Change 7)
+   ============================================================ */
+const TIPS = {
+  loadFactor: {
+    title: 'Load Factor — Planning Guidance',
+    html: `<p><strong>Definition:</strong> The assumed percentage of occupied aircraft seats used to size terminal facilities. Represents the expected passenger occupancy at the design hour.</p>
+<ul>
+  <li><strong>LOS A (high comfort):</strong> 90% — use when planning premium or hub gates</li>
+  <li><strong>LOS B/C (standard):</strong> 80–90% — typical North American practice (ACRP recommended range)</li>
+  <li><strong>LCC / low-cost gates:</strong> May use up to 95% for design-hour calculations</li>
+  <li><strong>IATA ADRM:</strong> Variable load factors based on carrier business model and passenger segment</li>
+</ul>
+<p class="tip-ref">Source: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11 §6</p>`
+  },
+  dwell: {
+    title: 'Dwell Attendance Factor — Planning Guidance',
+    html: `<p><strong>Definition:</strong> The fraction of peak-hour passengers expected to be physically present in the holdroom at any given moment. Accounts for staggered arrival patterns before boarding.</p>
+<ul>
+  <li><strong>Legacy/hub carriers:</strong> 0.75–0.85 (concentrated bank flights, longer pre-board waits)</li>
+  <li><strong>LCC point-to-point:</strong> 0.65–0.75 (rapid turns, overlap between departing and arriving pax)</li>
+  <li><strong>ACRP baseline:</strong> Calculates for passengers present 15 minutes prior to boarding</li>
+  <li><strong>IATA ADRM:</strong> Analyzes dwell times throughout a typical busy day</li>
+</ul>
+<p class="tip-ref">Source: ACRP Passenger Level of Service and Spatial Planning; IATA ADRM v11</p>`
+  },
+  seatingRatio: {
+    title: 'Seating Ratio — Planning Guidance',
+    html: `<p><strong>Definition:</strong> The percentage of design-load passengers allocated to seated vs. standing/spill space.</p>
+<ul>
+  <li><strong>ACRP LOS A:</strong> 60–80% seated (excellent comfort, ample seating)</li>
+  <li><strong>ACRP LOS B/C:</strong> 50% seated (standard North American practice)</li>
+  <li><strong>ACRP LOS D:</strong> &lt;50% seated (lower comfort; LCC short-duration acceptable)</li>
+  <li><strong>IATA ADRM Optimum:</strong> 50–70% seated</li>
+  <li><strong>High-density / LCC:</strong> 30–40% seated with standing spill zones</li>
+</ul>
+<p><strong>Note:</strong> Seating targets are typically applied to 90% of the largest aircraft seating capacity.</p>
+<p class="tip-ref">Source: ACRP Passenger Level of Service §3; dashboard_ground_truth.txt</p>`
+  },
+  sharedGate: {
+    title: 'Shared-Gate Discount — Planning Guidance',
+    html: `<p><strong>Definition:</strong> A programmatic reduction applied when gates are grouped in a contiguous cluster, justified by staggered peak occupancy timing.</p>
+<ul>
+  <li><strong>Mathematical basis:</strong> Adjacent gates rarely reach simultaneous peak occupancy — the peak of one typically coincides with the valley of another</li>
+  <li><strong>Rule of thumb:</strong> 5% reduction per additional gate in the cluster</li>
+  <li><strong>Typical range:</strong> 10–30% total area reduction for 3–6 gate clusters</li>
+  <li><strong>Cap:</strong> 30% maximum (ACRP guidance)</li>
+  <li><strong>Common-use gates:</strong> May apply additional discount for airline-agnostic operations</li>
+</ul>
+<p class="tip-ref">Source: ACRP Passenger Level of Service §4.2; dashboard_ground_truth.txt</p>`
+  }
+};
+
+function showTip(key){
+  const t = TIPS[key]; if(!t) return;
+  document.getElementById('tipTitle').textContent = t.title;
+  document.getElementById('tipBody').innerHTML = t.html;
+  document.getElementById('tipOverlay').classList.add('open');
+}
+function closeTip(){
+  document.getElementById('tipOverlay').classList.remove('open');
+}
+
+/* ============================================================
+   DXF 3D EXPORT (Change 8)
+   ============================================================ */
+function exportDXF(){
+  const r = R; if(!r) return;
+  const m = scenarioMeta();
+  const EXTRUDE_H = 20; // ft
+  const a = r.agg;
+  const range = r.isRange;
+
+  // Build zone dimensions from aggregate calculations
+  // Use average of range for DXF if IATA
+  const zones = [
+    { name:'SEATING_WAITING',    sf: range ? (a.lo.seating + a.hi.seating)/2 : a.lo.seating,  color: 1 }, // red
+    { name:'STANDING_SPILL',     sf: range ? (a.lo.standing + a.hi.standing)/2 : a.lo.standing, color: 3 }, // green
+    { name:'SECURE_WALKWAY',     sf: range ? (a.lo.corridor + a.hi.corridor)/2 : a.lo.corridor, color: 5 }, // blue
+    { name:'PODIUM_QUEUING',     sf: range ? (a.lo.queue + a.hi.queue)/2 : a.lo.queue,           color: 4 }, // cyan
+    { name:'GATE_AGENT_PODIUMS', sf: range ? (a.lo.podium + a.hi.podium)/2 : a.lo.podium,        color: 2 }, // yellow
+  ].filter(z => z.sf > 0);
+
+  // Layout zones as a stacked column along X axis
+  // Width = corridor frontage per gate * num gates
+  const totalFrontage = state.corridorLen * state.numGates;
+
+  let dxf = '';
+  // DXF Header
+  dxf += '0\nSECTION\n2\nHEADER\n9\n$ACADVER\n1\nAC1015\n9\n$INSUNITS\n70\n2\n0\nENDSEC\n';
+  // Tables section (layers)
+  dxf += '0\nSECTION\n2\nTABLES\n0\nTABLE\n2\nLAYER\n70\n' + (zones.length + 1) + '\n';
+  dxf += '0\nLAYER\n2\n0\n70\n0\n62\n7\n6\nCONTINUOUS\n';
+  zones.forEach(z => {
+    dxf += `0\nLAYER\n2\n${z.name}\n70\n0\n62\n${z.color}\n6\nCONTINUOUS\n`;
+  });
+  dxf += '0\nENDTAB\n0\nENDSEC\n';
+
+  // Entities section
+  dxf += '0\nSECTION\n2\nENTITIES\n';
+
+  let currentY = 0;
+  zones.forEach(z => {
+    // Calculate depth from sf and frontage
+    const depth = z.sf / Math.max(totalFrontage, 1);
+    const x0 = 0, y0 = currentY, x1 = totalFrontage, y1 = currentY + depth;
+    const z0 = 0, z1 = EXTRUDE_H;
+
+    // Draw 3DFACE (bottom face)
+    dxf += `0\n3DFACE\n8\n${z.name}\n62\n${z.color}\n`;
+    dxf += `10\n${x0.toFixed(4)}\n20\n${y0.toFixed(4)}\n30\n${z0.toFixed(4)}\n`;
+    dxf += `11\n${x1.toFixed(4)}\n21\n${y0.toFixed(4)}\n31\n${z0.toFixed(4)}\n`;
+    dxf += `12\n${x1.toFixed(4)}\n22\n${y1.toFixed(4)}\n32\n${z0.toFixed(4)}\n`;
+    dxf += `13\n${x0.toFixed(4)}\n23\n${y1.toFixed(4)}\n33\n${z0.toFixed(4)}\n`;
+
+    // Draw 3DFACE (top face)
+    dxf += `0\n3DFACE\n8\n${z.name}\n62\n${z.color}\n`;
+    dxf += `10\n${x0.toFixed(4)}\n20\n${y0.toFixed(4)}\n30\n${z1.toFixed(4)}\n`;
+    dxf += `11\n${x1.toFixed(4)}\n21\n${y0.toFixed(4)}\n31\n${z1.toFixed(4)}\n`;
+    dxf += `12\n${x1.toFixed(4)}\n22\n${y1.toFixed(4)}\n32\n${z1.toFixed(4)}\n`;
+    dxf += `13\n${x0.toFixed(4)}\n23\n${y1.toFixed(4)}\n33\n${z1.toFixed(4)}\n`;
+
+    // 4 side faces
+    [[x0,y0,x1,y0],[x1,y0,x1,y1],[x1,y1,x0,y1],[x0,y1,x0,y0]].forEach(([ax,ay,bx,by]) => {
+      dxf += `0\n3DFACE\n8\n${z.name}\n62\n${z.color}\n`;
+      dxf += `10\n${ax.toFixed(4)}\n20\n${ay.toFixed(4)}\n30\n${z0.toFixed(4)}\n`;
+      dxf += `11\n${bx.toFixed(4)}\n21\n${by.toFixed(4)}\n31\n${z0.toFixed(4)}\n`;
+      dxf += `12\n${bx.toFixed(4)}\n22\n${by.toFixed(4)}\n32\n${z1.toFixed(4)}\n`;
+      dxf += `13\n${ax.toFixed(4)}\n23\n${ay.toFixed(4)}\n33\n${z1.toFixed(4)}\n`;
+    });
+
+    // Text label at centroid
+    const cx = totalFrontage / 2, cy = currentY + depth / 2;
+    dxf += `0\nTEXT\n8\n${z.name}\n10\n${cx.toFixed(4)}\n20\n${cy.toFixed(4)}\n30\n${(z0+1).toFixed(4)}\n40\n3.0\n1\n${z.name.replace(/_/g,' ')} ${Math.round(z.sf)} SF\n72\n1\n`;
+
+    currentY += depth + 2; // 2 ft gap between zones
+  });
+
+  // Title block text
+  dxf += `0\nTEXT\n8\n0\n10\n0.0000\n20\n-8.0000\n30\n0.0000\n40\n3.0\n1\nRS&H Holdroom Program V4 — ${m.airport||'AIRPORT'} — ${m.fw} ${m.los} — ${m.date}\n`;
+
+  dxf += '0\nENDSEC\n0\nEOF\n';
+
+  const blob = new Blob([dxf], {type:'application/dxf'});
+  const url = URL.createObjectURL(blob);
+  const dlLink = document.createElement('a');
+  dlLink.href = url;
+  dlLink.download = `RSH_Holdroom_V4_3D_${state.framework}.dxf`;
+  document.body.appendChild(dlLink); dlLink.click(); document.body.removeChild(dlLink);
+  URL.revokeObjectURL(url);
+}
+/* ---- Init ---- */
+function init(){
+  state._autoCombo = true;
+  for(let i=0;i<state.numGates;i++) state.gates[i]=blankGate(i);
+  setFramework('ACRP');
+  renderGates();
+  syncSlider('loadFactor'); syncSlider('dwellFactor'); syncSlider('seatingRatio');
+  // Set default combo discount for 4 gates
+  state.comboPct = 0.20;
+  document.getElementById('comboPct').value = '0.20';
+  // Wire comboPct change to disable auto-scale
+  document.getElementById('comboPct').addEventListener('input',()=>{
+    state._autoCombo = false;
+    recompute();
+  });
+  recompute();
+}
+
+/* ---- External dataset loader ---- */
+async function fetchJsonDataset(path) {
+  const response = await fetch(path, {
+    method: 'GET',
+    cache: 'no-cache',
+    headers: { 'Accept': 'application/json' }
+  });
+
+  if (!response.ok) {
+    throw new Error(`${path} returned HTTP ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function showDatasetStatus(message, isError = false) {
+  let overlay = document.getElementById('datasetLoadingOverlay');
+
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'datasetLoadingOverlay';
+    overlay.setAttribute('role', 'status');
+    overlay.setAttribute('aria-live', 'polite');
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      zIndex: '99999',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px',
+      background: 'rgba(16, 50, 84, 0.92)',
+      color: '#ffffff',
+      fontFamily: "'Segoe UI', system-ui, sans-serif",
+      textAlign: 'center'
+    });
+
+    const panel = document.createElement('div');
+    panel.id = 'datasetLoadingPanel';
+    Object.assign(panel.style, {
+      maxWidth: '560px',
+      padding: '22px 26px',
+      border: '1px solid rgba(255,255,255,.25)',
+      borderRadius: '10px',
+      background: 'rgba(255,255,255,.10)',
+      boxShadow: '0 18px 48px rgba(0,0,0,.25)'
+    });
+
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+  }
+
+  const panel = document.getElementById('datasetLoadingPanel');
+  panel.innerHTML = '';
+
+  const heading = document.createElement('div');
+  heading.textContent = isError
+    ? 'Dashboard data could not be loaded'
+    : 'Loading dashboard datasets…';
+  Object.assign(heading.style, {
+    fontSize: '17px',
+    fontWeight: '700',
+    marginBottom: '7px'
+  });
+
+  const detail = document.createElement('div');
+  detail.textContent = message;
+  Object.assign(detail.style, {
+    fontSize: '13px',
+    lineHeight: '1.55',
+    color: isError ? '#fce9c4' : '#d7eaf9'
+  });
+
+  panel.appendChild(heading);
+  panel.appendChild(detail);
+}
+
+function validateLoadedDatasets() {
+  const checks = [
+    [AIRPORT_REGISTRY && !Array.isArray(AIRPORT_REGISTRY), 'airports.json'],
+    [FAA_REGION_NAMES && !Array.isArray(FAA_REGION_NAMES), 'faa-regions.json'],
+    [HUB_NAMES && !Array.isArray(HUB_NAMES), 'hub-types.json'],
+    [AIRLINE_LOOKUP && !Array.isArray(AIRLINE_LOOKUP), 'airlines.json'],
+    [Array.isArray(AIRCRAFT_DB), 'aircraft-planning.json'],
+    [AIRCRAFT_RAW_DB && !Array.isArray(AIRCRAFT_RAW_DB), 'aircraft-details.json']
+  ];
+
+  const invalidFiles = checks
+    .filter(([isValid]) => !isValid)
+    .map(([, filename]) => filename);
+
+  if (invalidFiles.length) {
+    throw new Error(`Unexpected JSON structure: ${invalidFiles.join(', ')}`);
+  }
+}
+
+async function loadDashboardData() {
+  showDatasetStatus(
+    'Loading airport, airline, FAA region, hub and aircraft information.'
+  );
+
+  try {
+    [
+      AIRPORT_REGISTRY,
+      FAA_REGION_NAMES,
+      HUB_NAMES,
+      AIRLINE_LOOKUP,
+      AIRCRAFT_DB,
+      AIRCRAFT_RAW_DB
+    ] = await Promise.all([
+      fetchJsonDataset('./data/airports.json'),
+      fetchJsonDataset('./data/faa-regions.json'),
+      fetchJsonDataset('./data/hub-types.json'),
+      fetchJsonDataset('./data/airlines.json'),
+      fetchJsonDataset('./data/aircraft-planning.json'),
+      fetchJsonDataset('./data/aircraft-details.json')
+    ]);
+
+    validateLoadedDatasets();
+    init();
+
+    const overlay = document.getElementById('datasetLoadingOverlay');
+    if (overlay) overlay.remove();
+  } catch (error) {
+    console.error('Dashboard dataset loading failed:', error);
+
+    const localFileNote = window.location.protocol === 'file:'
+      ? ' This page was opened directly from a computer folder. Run it through GitHub Pages or another web server instead.'
+      : '';
+
+    showDatasetStatus(
+      `Confirm that index.html and the data folder were uploaded together.${localFileNote}`,
+      true
+    );
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadDashboardData);
+
+</script>
+
+<!-- LIBRARIES: loaded after inline script to prevent CDN blocking init() -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/pptxgenjs@3.12.0/dist/pptxgen.bundle.js" defer></script>
+
+<!-- TOOLTIP OVERLAY -->
+<div class="tip-overlay" id="tipOverlay" onclick="if(event.target===this)closeTip()">
+  <div class="tip-box">
+    <div class="tip-header">
+      <h4 id="tipTitle">Guidance</h4>
+      <button class="tip-close" onclick="closeTip()">×</button>
+    </div>
+    <div class="tip-body" id="tipBody"></div>
+  </div>
+</div>
+
+<!-- AIRCRAFT RAW DATA MODAL -->
+<div class="ac-modal-overlay" id="acModalOverlay" onclick="if(event.target===this)closeAircraftModal()">
+  <div class="ac-modal">
+    <div class="ac-modal-header">
+      <h3 id="acModalHeader">FAA Aircraft Database Record</h3>
+      <button class="ac-modal-close" onclick="closeAircraftModal()">×</button>
+    </div>
+    <div class="ac-modal-body" id="acModalBody"></div>
+  </div>
+</div>
+</body>
+</html>
