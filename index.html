@@ -270,18 +270,13 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .ac-source-note{font-size:11px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px dashed var(--border);}
 
 /* PRINT */
-@page{size:letter landscape;margin:.4in;}
 @media print{
-  html,body{background:#fff!important;}
-  body>*:not(.print-memo){display:none!important;}
-  .print-memo{display:block!important;}
-  .pm-summary-page{break-after:page;page-break-after:always;}
-  .pm-schematic-page{break-after:page;page-break-after:always;break-inside:avoid;page-break-inside:avoid;}
-  .pm-schematic-page:last-child{break-after:auto;page-break-after:auto;}
-  .pm-schematic-svg .holdroom-svg{width:100%;height:auto;max-height:6.1in;}
+  .sidebar,.airport-bar,.export-bar,.edu-card,header,.gradient-rule,.footer-disc,.overlay{display:none!important;}
+  .layout{display:block;}
+  .content{padding:0;}
+  .print-memo{display:block;}
 }
 .print-memo{display:none;}
-.pm-summary-page,.pm-schematic-page{background:#fff;color:var(--text);}
 .pm-title{font-size:20px;font-weight:700;color:var(--rsh-navy);margin-bottom:4px;}
 .pm-meta{font-size:12px;color:var(--muted);margin-bottom:16px;}
 .pm-section-title{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--rsh-blue);margin:14px 0 6px;}
@@ -290,12 +285,6 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .pm-table thead th{background:var(--rsh-navy);color:#fff;font-size:10.5px;text-transform:uppercase;}
 .pm-table tr.tot td{font-weight:700;background:var(--rsh-blue-tint-2);color:var(--rsh-navy);}
 .pm-foot{font-size:10.5px;color:var(--muted);margin-top:14px;line-height:1.6;}
-.pm-schematic-page{min-height:6.9in;display:flex;flex-direction:column;}
-.pm-schematic-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;border-bottom:2px solid var(--rsh-navy);padding-bottom:8px;margin-bottom:12px;}
-.pm-schematic-title{font-size:19px;font-weight:700;color:var(--rsh-navy);}
-.pm-schematic-meta{font-size:11px;color:var(--muted);text-align:right;}
-.pm-schematic-svg{flex:1;display:flex;align-items:center;justify-content:center;}
-.pm-schematic-svg svg{display:block;width:100%;height:auto;}
 
 @media(max-width:920px){
   .layout{grid-template-columns:1fr;}
@@ -1046,8 +1035,7 @@ function renderSVG(r, gIdx){
   svg += `<line x1="${W-PAD-70}" y1="${PAD+26}" x2="${W-PAD-20}" y2="${PAD+26}" stroke="#215eac" stroke-width="1.5"/>`;
   svg += `<line x1="${W-PAD-20}" y1="${PAD+26}" x2="${W-PAD-6}" y2="${PAD+20.5}" stroke="#0ba89c" stroke-width="1.5"/>`;
 
-  // Begin the program blocks directly at the bottom edge of the gate header.
-  const drawY = PAD + 28;
+  const drawY = PAD + 42;
   const drawH = H - drawY - PAD;
   const drawW = W - 2*PAD;
 
@@ -1078,15 +1066,8 @@ function renderSVG(r, gIdx){
     {id:'queuing',label:'Podium Queuing Zone',sf:l.queue,fill:'#cfeeea',stroke:'#0ba89c',tc:'#0a5c56'},
     {id:'standing',label:'Standing / Spill Zone (40% of pax)',sf:l.standArea,fill:'#c8f0ec',stroke:'#0ba89c',tc:'#0a5c56'},
     {id:'seating',label:'Seating / Waiting (60% of pax, 15 sf)',sf:l.seatArea,fill:'#d7eaf9',stroke:'#215eac',tc:'#103254'},
-  ].forEach((zone, zoneIndex, allZones)=>{
-    const proportionalH = Math.max(16, (zone.sf/Math.max(sfTotal,1))*drawH);
-    const remainingZones = allZones.length - zoneIndex - 1;
-    const availableH = Math.max(0, curY - drawY - remainingZones * 16);
-    // The topmost Seating / Waiting zone uses all remaining space so its
-    // upper edge aligns exactly with the bottom edge of the gate header.
-    const h = zoneIndex === allZones.length - 1
-      ? Math.max(0, curY - drawY)
-      : Math.min(proportionalH, availableH);
+  ].forEach(zone=>{
+    const h = Math.max(16, (zone.sf/Math.max(sfTotal,1))*drawH);
     const ry = curY - h;
     svg += `<g class="svg-zone" id="z-${zone.id}">`;
     svg += `<rect class="zfill" x="${PAD}" y="${ry}" width="${drawW}" height="${h}" fill="${zone.fill}" stroke="${zone.stroke}" stroke-width="1"/>`;
@@ -1101,6 +1082,22 @@ function renderSVG(r, gIdx){
     svg += '</g>';
     curY -= h;
   });
+
+  // Podium icons
+  const podY = (() => {
+    let y2 = drawY+drawH;
+    [{sf:l.podium*0.1},{sf:l.corridor},{sf:l.podium}].forEach(z=>{
+      const h2 = Math.max(16,(z.sf/Math.max(sfTotal,1))*drawH);
+      y2 -= h2;
+    });
+    return y2;
+  })();
+  const podH2 = Math.max(16,(l.podium/Math.max(sfTotal,1))*drawH);
+  const iconY = podY + podH2/2 - 5;
+  for(let p=0;p<Math.min(adgI.positions,4);p++){
+    const ix = PAD + (drawW/(adgI.positions+1))*(p+1);
+    svg += `<rect x="${ix-8}" y="${iconY}" width="16" height="10" rx="2" fill="#fff" opacity="0.8"/>`;
+  }
 
   // 28° uptick accent mark at bottom right
   svg += `<line x1="${W-PAD-50}" y1="${H-PAD-2}" x2="${W-PAD-18}" y2="${H-PAD-2}" stroke="#215eac" stroke-width="2"/>`;
@@ -1415,65 +1412,31 @@ function buildPrintMemo(){
     const cl=adgInfo(g.adg);
     return `<tr><td>Gate ${i+1}</td><td>${AIRLINE_LOOKUP[g.airline]||g.airline||'—'}</td><td>${g.acModel||g.icao||'—'}</td><td class="r">${+g.seats||0}</td><td>ADG ${cl.label}</td><td class="r">${cl.positions}</td></tr>`;
   }).join('');
-
-  // Capture every active gate schematic using the same SVG renderer as the dashboard.
-  const originalGateTab = state.activeGateTab;
-  const svgWrap = document.getElementById('svgWrap');
-  const schematicPages = r.gates.map((g,i)=>{
-    const cl=adgInfo(g.adg);
-    renderSVG(r,i);
-    const schematicSvg = svgWrap ? svgWrap.innerHTML : '';
-    const airline = AIRLINE_LOOKUP[g.airline] || g.airline || '—';
-    return `
-      <section class="pm-schematic-page">
-        <div class="pm-schematic-heading">
-          <div>
-            <div class="pm-schematic-title">Holdroom Spatial Schematic — Gate ${i+1}</div>
-            <div class="pm-meta">${m.airport?m.airport+' · ':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los}</div>
-          </div>
-          <div class="pm-schematic-meta">
-            ${airline}<br>
-            ${g.acModel||g.icao||'—'} · ${+g.seats||0} seats · ADG ${cl.label}
-          </div>
-        </div>
-        <div class="pm-schematic-svg">${schematicSvg}</div>
-        <div class="pm-foot">Gate ${i+1} planning schematic. Areas are proportional planning representations and require project-specific validation before design use.</div>
-      </section>`;
-  }).join('');
-
-  // Restore the dashboard to the gate the user had selected before exporting.
-  state.activeGateTab = originalGateTab;
-  renderSVG(r, originalGateTab);
-  renderGateTabs();
-
   document.getElementById('printMemo').innerHTML=`
-    <section class="pm-summary-page">
-      <div class="pm-title">RS&H Holdroom Space Program</div>
-      <div class="pm-meta">${m.airport?m.airport+' · ':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los} · Generated ${m.date}</div>
-      <div class="pm-section-title">Program Summary</div>
-      <table class="pm-table">
-        <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
-        <tbody>
-          <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
-          <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
-          <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
-          <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
-          <tr><td>Seating Ratio</td><td class="r">${pct(state.seatingRatio)}</td></tr>
-          <tr><td>Corridor Width</td><td class="r">${state.corridorWidth} ft</td></tr>
-          <tr><td>Shared-Gate Discount</td><td class="r">${pct(state.comboPct)}</td></tr>
-          <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
-        </tbody>
-      </table>
-      <div class="pm-section-title">Gate Configuration</div>
-      <table class="pm-table">
-        <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
-        <tbody>${gateRows}</tbody>
-      </table>
-      <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis. Planning-level estimates for internal study; validate with a licensed professional before design or contractual use.</div>
-    </section>
-    ${schematicPages}`;
+    <div class="pm-title">RS&H Holdroom Space Program</div>
+    <div class="pm-meta">${m.airport?m.airport+' · ':''}${range?'IATA ADRM v11':'ACRP'} · ${m.los} · Generated ${m.date}</div>
+    <div class="pm-section-title">Program Summary</div>
+    <table class="pm-table">
+      <thead><tr><th>Parameter</th><th class="r">Value</th></tr></thead>
+      <tbody>
+        <tr><td>Total Holdroom Area</td><td class="r">${range?fmt(r.agg.lo.total)+' – '+fmt(r.agg.hi.total):fmt(r.agg.lo.total)} sf</td></tr>
+        <tr><td>Target Holdroom Passengers</td><td class="r">${fmt(r.agg.target)}</td></tr>
+        <tr><td>Load Factor</td><td class="r">${pct(state.loadFactor)}</td></tr>
+        <tr><td>Dwell Attendance Factor</td><td class="r">${pct(state.dwellFactor)}</td></tr>
+        <tr><td>Seating Ratio</td><td class="r">${pct(state.seatingRatio)}</td></tr>
+        <tr><td>Corridor Width</td><td class="r">${state.corridorWidth} ft</td></tr>
+        <tr><td>Shared-Gate Discount</td><td class="r">${pct(state.comboPct)}</td></tr>
+        <tr class="tot"><td>Avg sf / Gate</td><td class="r">${fmt((range?(r.agg.lo.total+r.agg.hi.total)/2:r.agg.lo.total)/state.numGates)}</td></tr>
+      </tbody>
+    </table>
+    <div class="pm-section-title">Gate Configuration</div>
+    <table class="pm-table">
+      <thead><tr><th>Stand</th><th>Airline</th><th>Aircraft</th><th class="r">Seats</th><th>ADG</th><th class="r">Podiums</th></tr></thead>
+      <tbody>${gateRows}</tbody>
+    </table>
+    <div class="pm-foot">Sources: ACRP Passenger Level of Service and Spatial Planning for Airports; IATA ADRM v11; FAA Aircraft Characteristics Database; RS&H planning analysis. Planning-level estimates for internal study; validate with a licensed professional before design or contractual use.</div>`;
 }
-function exportPDF(){ buildPrintMemo(); requestAnimationFrame(()=>window.print()); }
+function exportPDF(){ buildPrintMemo(); window.print(); }
 
 /* PPTX loader */
 function loadScript(src){ return new Promise((res,rej)=>{ const s=document.createElement('script'); s.src=src; s.async=true; s.onload=()=>res(true); s.onerror=()=>rej(new Error('load failed: '+src)); document.head.appendChild(s); }); }
@@ -1875,14 +1838,6 @@ async function loadDashboardData() {
     ]);
 
     validateLoadedDatasets();
-
-    // Rebuild the aircraft grouping now that the external JSON has loaded.
-    Object.keys(AIRCRAFT_BY_ADG).forEach(key => delete AIRCRAFT_BY_ADG[key]);
-    AIRCRAFT_DB.forEach(aircraft => {
-      if (!AIRCRAFT_BY_ADG[aircraft.adg]) AIRCRAFT_BY_ADG[aircraft.adg] = [];
-      AIRCRAFT_BY_ADG[aircraft.adg].push(aircraft);
-    });
-
     init();
 
     const overlay = document.getElementById('datasetLoadingOverlay');
