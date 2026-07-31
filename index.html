@@ -264,14 +264,16 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
 .ac-source-note{font-size:11px;color:var(--muted);line-height:1.5;padding-top:10px;border-top:1px dashed var(--border);}
 
 /* PRINT */
-@page{size:8.5in 11in;margin:.45in;}
+@page{size:8.5in 11in;margin:0;}
 @media print{
   html,body{background:#fff!important;width:8.5in;}
   body>*:not(.print-memo){display:none!important;}
   .print-memo{display:block!important;}
   .pm-summary-page,.pm-breakdown-page,.pm-schematic-page{
-    width:100%;
-    min-height:9.85in;
+    width:8.5in;
+    min-height:11in;
+    padding:.45in;
+    box-sizing:border-box;
     break-after:page;
     page-break-after:always;
     break-inside:avoid;
@@ -301,7 +303,7 @@ table.edu tr:hover td:not(.feat){background:var(--rsh-blue-tint-2);}
   .pm-breakdown-page .alloc h4,
   .pm-breakdown-page .alloc .occ,
   .pm-breakdown-page .alloc .foot{font-family:var(--font);font-size:12px;line-height:1.3;}
-  .pm-breakdown-page .pm-page-title{font-size:12px;}
+  .pm-breakdown-page .pm-page-title{font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--rsh-blue);}
   .pm-breakdown-page table.breakdown tr.total td:first-child{font-size:10px;}
   .pm-schematic-svg .holdroom-svg{
     width:100%;
